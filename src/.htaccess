@@ -1,0 +1,4 @@
+RewriteEngine On
+
+RewriteRule (\d{4})-(\d{2})-(\d{2})$ index.php?comic=$1-$2-$3
+RewriteRule random-comic$ random.php
