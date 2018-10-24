@@ -67,14 +67,12 @@ if new_date.strftime(FORMAT) == latest:
 left = (new_date + timedelta(days=-1)).strftime(FORMAT)
 right = (new_date + timedelta(days=1)).strftime(FORMAT)
 
-while True:
-    original = "http://dilbert.com/strip/" + new_date.strftime(FORMAT)
-    try:
-        resp = request.urlopen(original)
-        break
-    except request.HTTPError:
-        print("404")
-        sys.exit(1)
+original = "http://dilbert.com/strip/" + new_date.strftime(FORMAT)
+try:
+    resp = request.urlopen(original)
+except request.HTTPError:
+    print("404")
+    sys.exit(1)
 
 html = resp.read().decode("utf8")
 tag = re.findall('<img[^>]*class="img-[^>]*>', html)[0]
