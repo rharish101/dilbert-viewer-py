@@ -35,43 +35,39 @@
       if ($arr[0] === "404")
         die("Error 404: Comic not found");
     ?>
-    <div id="body">
+    <div id="body" class="text-center">
       <?php
-        echo '<div class="text-center h4">' . $arr[8] . '<div>';
+        echo '<div class="text-center h4">' . $arr[8] . '</div>';
         if ($arr[9] !== "")
-          echo '<div class="text-center mt-1 h6">' . $arr[9] . '<div>';
-        echo '<div class="text-center mt-4 mx-3"><img class="img-fluid" alt="' . $arr[1] . '" src="' . $arr[0] . '"></img></div>';
+          echo '<div class="text-center mt-1 h6">' . $arr[9] . '</div>';
+        echo '<div class="text-center mt-4 mx-3"><img class="img-fluid" alt="' . $arr[1] . '" src="' . $arr[0] . '"></img></div><br>';
+
+        if ($arr[6] === "True")
+        {
+          echo '<a href="' . $arr[2] . '" role="button" class="btn btn-primary mt-2 mx-1 disabled" aria-disabled="true">&lt&lt</a>';
+          echo '<a href="' . $arr[3] . '" role="button" class="btn btn-primary mt-2 mx-1 disabled" aria-disabled="true">&lt</a>';
+        }
+        else
+        {
+          echo '<a href="' . $arr[2] . '" role="button" class="btn btn-primary mt-2 mx-1">&lt&lt</a>';
+          echo '<a href="' . $arr[3] . '" role="button" class="btn btn-primary mt-2 mx-1">&lt</a>';
+        }
+      ?>
+      <a href="random-comic" role="button" class="btn btn-primary mt-2 mx-1">Random</a>
+      <?php
+        if ($arr[7] === "True")
+        {
+          echo '<a href="' . $arr[4] . '" role="button" class="btn btn-primary mt-2 mx-1 disabled" aria-disabled="true">&gt</a>';
+          echo '<a href="' . $arr[5] . '" role="button" class="btn btn-primary mt-2 mx-1 disabled" aria-disabled="true">&gt&gt</a>';
+        }
+        else
+        {
+          echo '<a href="' . $arr[4] . '" role="button" class="btn btn-primary mt-2 mx-1">&gt</a>';
+          echo '<a href="' . $arr[5] . '" role="button" class="btn btn-primary mt-2 mx-1">&gt&gt</a>';
+        }
       ?>
       <br>
-      <div class="text-center">
-        <?php
-          if ($arr[6] === "True")
-          {
-            echo '<a href="' . $arr[2] . '" role="button" class="btn btn-primary mt-2 mx-1 disabled" aria-disabled="true">&lt&lt</a>';
-            echo '<a href="' . $arr[3] . '" role="button" class="btn btn-primary mt-2 mx-1 disabled" aria-disabled="true">&lt</a>';
-          }
-          else
-          {
-            echo '<a href="' . $arr[2] . '" role="button" class="btn btn-primary mt-2 mx-1">&lt&lt</a>';
-            echo '<a href="' . $arr[3] . '" role="button" class="btn btn-primary mt-2 mx-1">&lt</a>';
-          }
-        ?>
-        <a href="random-comic" role="button" class="btn btn-primary mt-2 mx-1">Random</a>
-        <?php
-          if ($arr[7] === "True")
-          {
-            echo '<a href="' . $arr[4] . '" role="button" class="btn btn-primary mt-2 mx-1 disabled" aria-disabled="true">&gt</a>';
-            echo '<a href="' . $arr[5] . '" role="button" class="btn btn-primary mt-2 mx-1 disabled" aria-disabled="true">&gt&gt</a>';
-          }
-          else
-          {
-            echo '<a href="' . $arr[4] . '" role="button" class="btn btn-primary mt-2 mx-1">&gt</a>';
-            echo '<a href="' . $arr[5] . '" role="button" class="btn btn-primary mt-2 mx-1">&gt&gt</a>';
-          }
-        ?>
-        <br>
-        <a href="<?php echo $arr[1]; ?>" target="_blank" role="button" class="btn btn-link my-3 mx-1">Permalink</a>
-      </div>
+      <a href="<?php echo $arr[1]; ?>" target="_blank" role="button" class="btn btn-link my-3 mx-1">Permalink</a>
     </div>
   </body>
 </html>
