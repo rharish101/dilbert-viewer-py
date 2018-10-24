@@ -1,7 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+  <?php
+    if (! isset($_GET['comic']))
+      $_GET['comic'] = "latest";
+    $command = escapeshellcmd('python3 get_dilbert.py ' . $_GET['comic']);
+    $output = shell_exec($command);
+    $arr = explode("\n", $output);
+    if ($arr[9] !== "")
+      $name = $arr[9] . " - ";
+    else
+      $name = "";
+  ?>
   <head>
-    <title>Dilbert Viewer</title>
+    <title><?php echo $name; ?>Dilbert Viewer</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="icon" type="image/png" href="favicon.png" sizes="196x196">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,18 +31,17 @@
     </style>
   </head>
   <body>
+    <?php
+      if ($arr[0] === "404")
+        die("Error 404: Comic not found");
+    ?>
     <div id="body">
       <?php
-        if (! isset($_GET['comic']))
-          $_GET['comic'] = "latest";
-        $command = escapeshellcmd('python3 get_dilbert.py ' . $_GET['comic']);
-        $output = shell_exec($command);
-        $arr = explode("\n", $output);
-        if ($arr[0] === "404")
-          die("Error 404: Comic not found");
+        echo '<div class="text-center h4">' . $arr[8] . '<div>';
+        if ($arr[9] !== "")
+          echo '<div class="text-center mt-1 h6">' . $arr[9] . '<div>';
         echo '<div class="text-center mt-4 mx-3"><img class="img-fluid" alt="' . $arr[1] . '" src="' . $arr[0] . '"></img></div>';
       ?>
-
       <br>
       <div class="text-center">
         <?php

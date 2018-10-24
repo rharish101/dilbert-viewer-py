@@ -75,9 +75,20 @@ except request.HTTPError:
     sys.exit(1)
 
 html = resp.read().decode("utf8")
-tag = re.findall('<img[^>]*class="img-[^>]*>', html)[0]
-
-url = re.findall('src="[^"]+"', tag)[0][5:-1]
+url = re.findall('<img[^>]*class="img-[^>]*src="([^"]+)"[^>]*>', html)[0]
+date = " ".join(
+    re.findall(
+        '<date class="comic-title-date" item[pP]rop="datePublished">'
+        '[^<]*<span>([^<]*)</span>[^<]*<span item[pP]rop="copyrightYear">'
+        "([^<]+)</span>",
+        html,
+    )[0]
+)
+name = re.findall('<span class="comic-title-name">([^<]+)</span', html)
+if len(name) > 0:
+    name = name[0]
+else:
+    name = ""
 
 data = [
     url,
@@ -88,6 +99,8 @@ data = [
     latest,
     is_first,
     is_latest,
+    date,
+    name,
     datetime.now(),
 ]
 cache[args.comic] = data
