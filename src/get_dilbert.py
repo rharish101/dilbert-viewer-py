@@ -13,7 +13,7 @@ args = parser.parse_args()
 
 FIRST = "1989-04-16"
 FORMAT = "%Y-%m-%d"
-CACHE_FILE = "cache.pickle"
+CACHE_FILE = "/tmp/cache.pickle"
 CACHE_LIMIT = 1000
 
 if args.comic == "latest":
