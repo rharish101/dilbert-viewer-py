@@ -32,6 +32,8 @@
   </head>
   <body>
     <?php
+      if ($url !== $arr[10])
+        header('LOCATION: ' . $prefix . 'index.php/' . $arr[10]);
       if ($arr[0] === "404")
         die("Error 404: Comic not found");
     ?>

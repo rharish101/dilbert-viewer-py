@@ -40,7 +40,7 @@ except FileNotFoundError:
     cache = pqdict(key=key_func)
 
 if args.comic in cache:
-    if (datetime.now() - cache[args.comic][-1]).days == 0:
+    if (datetime.now() - cache[args.comic][-1]).seconds < 12 * 60 * 60:
         for item in cache[args.comic]:
             print(item)
         sys.exit(0)
@@ -51,15 +51,16 @@ is_latest = False
 if new_date.strftime(FORMAT) == FIRST:
     is_first = True
 
-try:
-    request.urlopen(
-        "http://dilbert.com/strip/" + datetime.now().strftime(FORMAT)
-    )
+resp = request.urlopen(
+    "http://dilbert.com/strip/" + datetime.now().strftime(FORMAT)
+)
+if resp.url.split("/")[-1] == datetime.now().strftime(FORMAT):
     latest = datetime.now().strftime(FORMAT)
-except request.HTTPError:  # Timezone issues
+else:  # Timezone issues
     latest = (datetime.now() - timedelta(days=1)).strftime(FORMAT)
-    if args.comic == "latest":
-        new_date = datetime.strptime(latest, FORMAT)
+
+if args.comic == "latest":
+    new_date = datetime.strptime(latest, FORMAT)
 
 if new_date.strftime(FORMAT) == latest:
     is_latest = True
@@ -90,6 +91,10 @@ if len(name) > 0:
 else:
     name = ""
 
+actual_date = datetime.strptime(
+    " ".join(date.split()[1:]), "%B %d, %Y"
+).strftime(FORMAT)
+
 data = [
     url,
     original,
@@ -103,7 +108,7 @@ data = [
     name,
     datetime.now(),
 ]
-cache[args.comic] = data
+cache[actual_date] = data
 if len(cache) > CACHE_LIMIT:
     cache.pop()
 with open(CACHE_FILE, "wb") as cfile:
