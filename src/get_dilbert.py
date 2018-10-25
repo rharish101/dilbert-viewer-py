@@ -18,6 +18,7 @@ CACHE_LIMIT = 1000
 
 if args.comic == "latest":
     new_date = datetime.now()
+    args.comic = new_date.strftime(FORMAT)
 else:
     try:
         new_date = datetime.strptime(args.comic, FORMAT)
@@ -106,6 +107,7 @@ data = [
     is_latest,
     date,
     name,
+    actual_date,
     datetime.now(),
 ]
 cache[actual_date] = data
