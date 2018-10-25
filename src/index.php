@@ -39,7 +39,7 @@
     ?>
     <div id="body" class="text-center">
       <?php
-        echo '<div class="h4">' . $arr[8] . '</div>';
+        echo '<div class="h4 mt-4">' . $arr[8] . '</div>';
         if ($arr[9] !== "")
           echo '<div class="mt-1 h6">' . $arr[9] . '</div>';
         echo '<div class="mt-4 mx-3"><img class="img-fluid" alt="' . $arr[1] . '" src="' . $arr[0] . '"></img></div><br>';
@@ -70,7 +70,7 @@
       ?>
       <br>
       <a href="<?php echo $arr[1]; ?>" target="_blank" role="button" class="btn btn-link my-3 mx-1">Permalink</a>
-      <div class="github"><a href="https://github.com/rharish101/dilbert-viewer" target="_blank" class="btn btn-light"><span class="h5"><i class="fab fa-github"></i></span></a></div>
+      <div class="github mb-3"><a href="https://github.com/rharish101/dilbert-viewer" target="_blank" class="btn btn-light"><span class="h5"><i class="fab fa-github"></i></span></a></div>
     </div>
   </body>
 </html>
