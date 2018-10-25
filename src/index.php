@@ -1,16 +1,17 @@
-<!DOCTYPE html>
+<?php
+  if (! isset($_GET['comic']))
+    $_GET['comic'] = "latest";
+  $command = escapeshellcmd('python3 get_dilbert.py ' . $_GET['comic']);
+  $output = shell_exec($command);
+  $arr = explode("\n", $output);
+  if ($_GET['comic'] !== $arr[10])
+    header('LOCATION: ' . $arr[10]);
+  if ($arr[9] !== "")
+    $name = $arr[9] . " - ";
+  else
+    $name = "";
+?>
 <html lang="en">
-  <?php
-    if (! isset($_GET['comic']))
-      $_GET['comic'] = "latest";
-    $command = escapeshellcmd('python3 get_dilbert.py ' . $_GET['comic']);
-    $output = shell_exec($command);
-    $arr = explode("\n", $output);
-    if ($arr[9] !== "")
-      $name = $arr[9] . " - ";
-    else
-      $name = "";
-  ?>
   <head>
     <title><?php echo $name; ?>Dilbert Viewer</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
@@ -32,8 +33,6 @@
   </head>
   <body>
     <?php
-      if ($url !== $arr[10])
-        header('LOCATION: ' . $arr[10]);
       if ($arr[0] === "404")
         die("Error 404: Comic not found");
     ?>
