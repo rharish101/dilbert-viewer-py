@@ -4,10 +4,11 @@
   $command = escapeshellcmd('python3 get_dilbert.py ' . $_GET['comic']);
   $output = shell_exec($command);
   $arr = explode("\n", $output);
-  if ($_GET['comic'] !== $arr[10])
-    header('LOCATION: ' . $arr[10]);
-  if ($arr[9] !== "")
-    $name = $arr[9] . " - ";
+  $current = substr($arr[1], -10);
+  if ($_GET['comic'] !== $current)
+    header('LOCATION: ' . $current);
+  if ($arr[7] !== "")
+    $name = $arr[7] . " - ";
   else
     $name = "";
 ?>
@@ -39,12 +40,12 @@
     ?>
     <div id="body" class="text-center">
       <?php
-        echo '<div class="h4 mt-4">' . $arr[8] . '</div>';
-        if ($arr[9] !== "")
-          echo '<div class="mt-1 h6">' . $arr[9] . '</div>';
+        echo '<div class="h4 mt-4">' . $arr[6] . '</div>';
+        if ($arr[7] !== "")
+          echo '<div class="mt-1 h6">' . $arr[7] . '</div>';
         echo '<div class="mt-4 mx-3"><img class="img-fluid" alt="' . $arr[1] . '" src="' . $arr[0] . '"></img></div><br>';
 
-        if ($arr[6] === "True")
+        if ($current === $arr[2])
         {
           echo '<a href="' . $arr[2] . '" role="button" class="btn btn-primary mt-2 mx-1 disabled" aria-disabled="true">&lt&lt</a>';
           echo '<a href="' . $arr[3] . '" role="button" class="btn btn-primary mt-2 mx-1 disabled" aria-disabled="true">&lt</a>';
@@ -57,7 +58,7 @@
       ?>
       <a href="random-comic" role="button" class="btn btn-primary mt-2 mx-1">Random</a>
       <?php
-        if ($arr[7] === "True")
+        if ($current === $arr[5])
         {
           echo '<a href="' . $arr[4] . '" role="button" class="btn btn-primary mt-2 mx-1 disabled" aria-disabled="true">&gt</a>';
           echo '<a href="' . $arr[5] . '" role="button" class="btn btn-primary mt-2 mx-1 disabled" aria-disabled="true">&gt&gt</a>';

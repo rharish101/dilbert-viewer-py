@@ -15,6 +15,7 @@ FIRST = "1989-04-16"
 FORMAT = "%Y-%m-%d"
 CACHE_FILE = "/tmp/cache.pickle"
 CACHE_LIMIT = 1000
+CACHE_REFRESH = 2 * 60 * 60
 
 if args.comic == "latest":
     new_date = datetime.now()
@@ -41,16 +42,10 @@ except FileNotFoundError:
     cache = pqdict(key=key_func)
 
 if args.comic in cache:
-    if (datetime.now() - cache[args.comic][-1]).seconds < 12 * 60 * 60:
+    if (datetime.now() - cache[args.comic][-1]).seconds < CACHE_REFRESH:
         for item in cache[args.comic]:
             print(item)
         sys.exit(0)
-
-is_first = False
-is_latest = False
-
-if new_date.strftime(FORMAT) == FIRST:
-    is_first = True
 
 resp = request.urlopen(
     "http://dilbert.com/strip/" + datetime.now().strftime(FORMAT)
@@ -62,12 +57,6 @@ else:  # Timezone issues
 
 if args.comic == "latest":
     new_date = datetime.strptime(latest, FORMAT)
-
-if new_date.strftime(FORMAT) == latest:
-    is_latest = True
-
-left = (new_date + timedelta(days=-1)).strftime(FORMAT)
-right = (new_date + timedelta(days=1)).strftime(FORMAT)
 
 original = "http://dilbert.com/strip/" + new_date.strftime(FORMAT)
 try:
@@ -92,24 +81,18 @@ if len(name) > 0:
 else:
     name = ""
 
-actual_date = datetime.strptime(
-    " ".join(date.split()[1:]), "%B %d, %Y"
+new_date = datetime.strptime(" ".join(date.split()[1:]), "%B %d, %Y")
+original = "http://dilbert.com/strip/" + new_date.strftime(FORMAT)
+actual_date = new_date.strftime(FORMAT)
+
+left = max(
+    datetime.strptime(FIRST, FORMAT), new_date + timedelta(days=-1)
+).strftime(FORMAT)
+right = min(
+    datetime.strptime(latest, FORMAT), new_date + timedelta(days=1)
 ).strftime(FORMAT)
 
-data = [
-    url,
-    original,
-    FIRST,
-    left,
-    right,
-    latest,
-    is_first,
-    is_latest,
-    date,
-    name,
-    actual_date,
-    datetime.now(),
-]
+data = [url, original, FIRST, left, right, latest, date, name, datetime.now()]
 cache[actual_date] = data
 if len(cache) > CACHE_LIMIT:
     cache.pop()
