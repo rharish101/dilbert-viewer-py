@@ -1,6 +1,6 @@
 # Dilbert Viewer
 A simple comic viewer for Dilbert by Scott Adams.  
-A version without the `.htaccess` file is live [here](https://cse.iitk.ac.in/users/rharish/dilbert-viewer).
+This is the repository for the viewer live [here](https://dilbert-viewer.herokuapp.com).
 
 ## How to Use
 1. Start the docker daemon:
