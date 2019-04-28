@@ -1,6 +1,11 @@
 <?php
-  $command = escapeshellcmd('python3 get_random_date.py');
-  $output = shell_exec($command);
-  $arr = explode("\n", $output);
-  header('LOCATION: ' . $arr[0]);
+
+require 'params.php';
+$first = new DateTime(FIRST);  # First dilbert comic ever
+$now = new DateTime('now');
+$span = $now->diff($first, true)->format('%d');
+$days = rand(0, $span);
+$rand_date = $first->add(new DateInterval('P' . $days . 'D'));
+header('LOCATION: ' . $rand_date->format(FORMAT));
+
 ?>
