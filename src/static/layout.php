@@ -4,8 +4,8 @@
 <head>
   <title><?php echo $title; ?>Dilbert Viewer</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="icon" type="image/png" href="favicon.png" sizes="96x96">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="icon" type="image/png" href="/static/resources/favicon.png" sizes="96x96">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
@@ -32,7 +32,7 @@
   <a href="<?php echo $permalink; ?>" target="_blank" role="button" class="btn btn-link my-3 mx-1">Permalink</a>
   <div class="github mb-3">
     <a href="<?php echo GITHUB_REPO; ?>" target="_blank" class="btn btn-light">
-      <span class="h5"><img src="github.png" height="24" width="24"></span>
+      <span class="h5"><img src="/static/resources/github.png" height="24" width="24"></span>
     </a>
   </div>
 

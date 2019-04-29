@@ -27,7 +27,7 @@ $disable_left = ($data['actual_date'] === FIRST) ? ' disabled' : '';  # String t
 $disable_right = ($data['actual_date'] === $data['latest_date']) ? ' disabled' : '';  # String to disable right navigation
 
 ob_start();
-require 'layout.php';
+require 'static/layout.php';
 ob_flush();
 
 ?>
