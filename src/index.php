@@ -2,13 +2,19 @@
   require 'params.php';  # Defines constants like FIRST
   require 'get_dilbert.php';
 
+  # Connect to PostgreSQL cache
+  $conn = pg_connect(getenv("DATABASE_URL"));
+  if (!$conn)
+    die("Unable to connect to PostgreSQL");
+
   if (! isset($_GET['comic']))
     $_GET['comic'] = "latest";
-  $data = get_dilbert_data($_GET['comic']);
-  if ($_GET['comic'] !== $data['current'])
-    header('LOCATION: ' . $data['current']);
-  if ($data['name'] !== "")
-    $title = $data['name'] . " - ";
+  $data = get_dilbert_data($conn, $_GET['comic']);
+
+  if ($_GET['comic'] !== $data['actual_date'])
+    header('LOCATION: ' . $data['actual_date']);
+  if ($data['title'] !== "")
+    $title = $data['title'] . " - ";
   else
     $title = "";
 ?>
@@ -34,29 +40,25 @@
     </style>
   </head>
   <body>
-    <?php
-      if ($data['url'] === "404")
-        die("Error 404: Comic not found");
-    ?>
     <div id="body" class="text-center">
       <?php
-        echo '<div class="h4 mt-4">' . $data['date'] . '</div>';
-        if ($data['name'] !== "")
-          echo '<div class="mt-1 h6">' . $data['name'] . '</div>';
-        echo '<div class="mt-4 mx-3"><img class="img-fluid" alt="' . $data['current'] . '" src="' . $data['url'] . '"></img></div><br>';
+        echo '<div class="h4 mt-4">' . $data['date_str'] . '</div>';
+        if ($data['title'] !== "")
+          echo '<div class="mt-1 h6">' . $data['title'] . '</div>';
+        echo '<div class="mt-4 mx-3"><img class="img-fluid" alt="' . $data['actual_date'] . '" src="' . $data['img_url'] . '"></img></div><br>';
 
-        $disable_left = ($data['current'] === FIRST) ? ' disabled' : '';
+        $disable_left = ($data['actual_date'] === FIRST) ? ' disabled' : '';
         echo '<a href="' . FIRST . '" role="button" class="btn btn-primary mt-2 mx-1 ' . $disable_left . '">&lt&lt</a>';
-        echo '<a href="' . $data['left'] . '" role="button" class="btn btn-primary mt-2 mx-1 ' . $disable_left . '">&lt</a>';
+        echo '<a href="' . $data['left_date'] . '" role="button" class="btn btn-primary mt-2 mx-1 ' . $disable_left . '">&lt</a>';
       ?>
       <a href="random-comic" role="button" class="btn btn-primary mt-2 mx-1">Random</a>
       <?php
-        $disable_right = ($data['current'] === $data['latest']) ? ' disabled' : '';
-        echo '<a href="' . $data['right'] . '" role="button" class="btn btn-primary mt-2 mx-1 ' . $disable_right . '">&gt</a>';
-        echo '<a href="' . $data['latest'] . '" role="button" class="btn btn-primary mt-2 mx-1 ' . $disable_right . '">&gt&gt</a>';
+        $disable_right = ($data['actual_date'] === $data['latest_date']) ? ' disabled' : '';
+        echo '<a href="' . $data['right_date'] . '" role="button" class="btn btn-primary mt-2 mx-1 ' . $disable_right . '">&gt</a>';
+        echo '<a href="' . $data['latest_date'] . '" role="button" class="btn btn-primary mt-2 mx-1 ' . $disable_right . '">&gt&gt</a>';
       ?>
       <br>
-      <a href="<?php echo $data['current']; ?>" target="_blank" role="button" class="btn btn-link my-3 mx-1">Permalink</a>
+      <a href="<?php echo $data['actual_date']; ?>" target="_blank" role="button" class="btn btn-link my-3 mx-1">Permalink</a>
       <div class="github mb-3"><a href="https://github.com/rharish101/dilbert-viewer" target="_blank" class="btn btn-light"><span class="h5"><i class="fab fa-github"></i></span></a></div>
     </div>
   </body>
