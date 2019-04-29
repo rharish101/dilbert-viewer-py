@@ -22,7 +22,6 @@
   <head>
     <title><?php echo $title; ?>Dilbert Viewer</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz" crossorigin="anonymous">
     <link rel="icon" type="image/png" href="favicon.png" sizes="196x196">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
@@ -59,7 +58,7 @@
       ?>
       <br>
       <a href="<?php echo 'https://dilbert.com/strip/' . $data['actual_date']; ?>" target="_blank" role="button" class="btn btn-link my-3 mx-1">Permalink</a>
-      <div class="github mb-3"><a href="https://github.com/rharish101/dilbert-viewer" target="_blank" class="btn btn-light"><span class="h5"><i class="fab fa-github"></i></span></a></div>
+      <div class="github mb-3"><a href="https://github.com/rharish101/dilbert-viewer" target="_blank" class="btn btn-light"><span class="h5"><img src="github.png" height="24" width="24"></span></a></div>
     </div>
   </body>
 </html>
