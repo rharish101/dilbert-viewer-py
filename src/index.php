@@ -58,7 +58,7 @@
         echo '<a href="' . $data['latest_date'] . '" role="button" class="btn btn-primary mt-2 mx-1 ' . $disable_right . '">&gt&gt</a>';
       ?>
       <br>
-      <a href="<?php echo $data['actual_date']; ?>" target="_blank" role="button" class="btn btn-link my-3 mx-1">Permalink</a>
+      <a href="<?php echo 'https://dilbert.com/strip/' . $data['actual_date']; ?>" target="_blank" role="button" class="btn btn-link my-3 mx-1">Permalink</a>
       <div class="github mb-3"><a href="https://github.com/rharish101/dilbert-viewer" target="_blank" class="btn btn-light"><span class="h5"><i class="fab fa-github"></i></span></a></div>
     </div>
   </body>

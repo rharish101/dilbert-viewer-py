@@ -61,7 +61,7 @@ function get_dilbert_data($conn, $comic)
 
   # Get the latest comic for getting its date
   $curl_handle = curl_init();
-  curl_setopt($curl_handle, CURLOPT_URL, "http://dilbert.com/strip/" . $now->format(FORMAT));
+  curl_setopt($curl_handle, CURLOPT_URL, "https://dilbert.com/strip/" . $now->format(FORMAT));
   curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($curl_handle, CURLOPT_FOLLOWLOCATION, true);
   curl_exec($curl_handle);
@@ -78,7 +78,7 @@ function get_dilbert_data($conn, $comic)
 
   # Get the comic webpage's contents
   $curl_handle = curl_init();
-  curl_setopt($curl_handle, CURLOPT_URL, "http://dilbert.com/strip/" . $comic);
+  curl_setopt($curl_handle, CURLOPT_URL, "https://dilbert.com/strip/" . $comic);
   curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, true);
   curl_setopt($curl_handle, CURLOPT_FOLLOWLOCATION, true);
   $content = curl_exec($curl_handle);
