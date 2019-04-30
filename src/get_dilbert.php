@@ -84,28 +84,50 @@ function cache_data($conn, $data, $comic)
   }
 }
 
-function get_latest_comic_date()
+function get_curl_info($url)
 {
   $now = new DateTime("now");
-  $curl_handle = curl_init();
-  curl_setopt($curl_handle, CURLOPT_URL, SOURCE_PREFIX . $now->format(FORMAT));
-  curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($curl_handle, CURLOPT_FOLLOWLOCATION, true);
-  curl_exec($curl_handle);
-  $resp_url = curl_getinfo($curl_handle, CURLINFO_EFFECTIVE_URL);
-  curl_close($curl_handle);
-  return end(explode("/", $resp_url));  # Split by "/" and get the last element
-}
 
-function get_webpage($url)
-{
-  $curl_handle = curl_init();
-  curl_setopt($curl_handle, CURLOPT_URL, $url);
-  curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($curl_handle, CURLOPT_FOLLOWLOCATION, true);
-  $content = curl_exec($curl_handle);
-  curl_close($curl_handle);
-  return $content;
+  # Setup the handle for getting the comic webpage's contents
+  $comic_handle = curl_init();
+  curl_setopt($comic_handle, CURLOPT_URL, $url);
+  curl_setopt($comic_handle, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($comic_handle, CURLOPT_FOLLOWLOCATION, true);
+
+  # Setup the handle for getting the latest date
+  $latest_date_handle = curl_init();
+  curl_setopt($latest_date_handle, CURLOPT_URL, SOURCE_PREFIX . $now->format(FORMAT));
+  curl_setopt($latest_date_handle, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($latest_date_handle, CURLOPT_FOLLOWLOCATION, true);
+
+  # Handle to do async cURL for both handles at the same time
+  $multi_handle = curl_multi_init();
+  curl_multi_add_handle($multi_handle, $comic_handle);
+  curl_multi_add_handle($multi_handle, $latest_date_handle);
+
+  # Execute them both
+  do
+  {
+    $curl_status = curl_multi_exec($multi_handle, $curl_active);
+  } while ($curl_active && ($curl_status == CURLM_OK));
+
+  # Close the multi-handle; only single handles needed
+  curl_multi_remove_handle($multi_handle, $comic_handle);
+  curl_multi_remove_handle($multi_handle, $latest_date_handle);
+  curl_multi_close($multi_handle);
+
+  # Get the comic webpage's contents
+  $content = curl_multi_getcontent($comic_handle);
+  # Get the latest comic's URL
+  # This relies on "dilbert.com" auto-redirecting to the latest comic
+  $resp_url = curl_getinfo($latest_date_handle, CURLINFO_EFFECTIVE_URL);
+  $latest_date = end(explode("/", $resp_url));  # Split by "/" and get the last element
+
+  # Close the single handles too
+  curl_close($comic_handle);
+  curl_close($latest_date_handle);
+
+  return array($content, $latest_date);
 }
 
 function get_dilbert_data($conn, $comic)
@@ -138,14 +160,12 @@ function get_dilbert_data($conn, $comic)
   elseif (pg_num_rows($result) > 0)  # Found in cache
     return pg_fetch_array($result, 0, PGSQL_ASSOC);  # Return the row as an associative array
 
-  # Get the latest comic for getting its date
-  $data['latest_date'] = get_latest_comic_date();
+  # Get the comic webpage's contents and the latest comic (for getting its date)
+  # Multiple returns (as an array) are stored into LHS using list
+  list($content, $data['latest_date']) = get_curl_info(SOURCE_PREFIX . $comic_date->format(FORMAT));
 
   if ($comic === "now")  # Get actual latest comic
     $comic_date = new DateTime($data['latest_date']);
-
-  # Get the comic webpage's contents
-  $content = get_webpage(SOURCE_PREFIX . $comic_date->format(FORMAT));
 
   # Get the URL of the comic image
   preg_match('/<img[^>]*class="img-[^>]*src="([^"]+)"[^>]*>/', $content, $matches);
