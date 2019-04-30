@@ -118,6 +118,8 @@ function get_dilbert_data($conn, $comic)
   # Check and see if date format is correct
   try
   {
+    if ((!preg_match('/^\d{4}-\d{2}-\d{2}$/', $comic)) && ($comic !== 'now'))
+      throw new Exception('Invalid date format provided');
     $comic_date = new DateTime($comic);
     $comic_date = min(max($comic_date, new DateTime(FIRST)), $now);
   }
