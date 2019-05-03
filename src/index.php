@@ -23,8 +23,8 @@ if ($_GET['comic'] !== $data['actual_date'])
 # Store stuff that is to be echoed in the HTML
 $title = ($data['title'] !== "") ? ($data['title'] . ' - ') : '';  # Title of the page
 $permalink = SOURCE_PREFIX . $data['actual_date'];  # Link to strip on "dilbert.com"
-$disable_left = ($data['actual_date'] === FIRST) ? ' disabled' : '';  # String to disable left navigation
-$disable_right = ($data['actual_date'] === $data['latest_date']) ? ' disabled' : '';  # String to disable right navigation
+$disable_left = $data['actual_date'] === FIRST;  # String to disable left navigation
+$disable_right = $data['actual_date'] === $data['latest_date'];  # String to disable right navigation
 
 ob_start();
 require 'static/layout.php';

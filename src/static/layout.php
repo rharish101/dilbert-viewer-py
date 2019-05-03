@@ -21,11 +21,11 @@
   <br>
 
   <!-- Navigation buttons -->
-  <a href="<?php echo FIRST; ?>" role="button" class="btn btn-primary mt-2 mx-1 <?php echo $disable_left; ?>">&lt&lt</a>
-  <a href="<?php echo $data['left_date']; ?>" role="button" class="btn btn-primary mt-2 mx-1 <?php echo $disable_left; ?>">&lt</a>
+  <a href="<?php echo FIRST; ?>" role="button" class="btn btn-primary mt-2 mx-1<?php echo $disable_left ? ' disabled' : ''; ?>" aria-disabled="<?php echo $disable_left ? 'true' : 'false'; ?>">&lt&lt</a>
+  <a href="<?php echo $data['left_date']; ?>" role="button" class="btn btn-primary mt-2 mx-1<?php echo $disable_left ? ' disabled' : ''; ?>" aria-disabled="<?php echo $disable_left ? 'true' : 'false'; ?>">&lt</a>
   <a href="random-comic" role="button" class="btn btn-primary mt-2 mx-1">Random</a>
-  <a href="<?php echo $data['right_date']; ?>" role="button" class="btn btn-primary mt-2 mx-1 <?php echo $disable_right; ?>">&gt</a>
-  <a href="<?php echo $data['latest_date']; ?>" role="button" class="btn btn-primary mt-2 mx-1 <?php echo $disable_right; ?>">&gt&gt</a>
+  <a href="<?php echo $data['right_date']; ?>" role="button" class="btn btn-primary mt-2 mx-1<?php echo $disable_right ? ' disabled' : ''; ?>" aria-disabled="<?php echo $disable_right ? 'true' : 'false'; ?>">&gt</a>
+  <a href="<?php echo $data['latest_date']; ?>" role="button" class="btn btn-primary mt-2 mx-1<?php echo $disable_right ? ' disabled' : ''; ?>" aria-disabled="<?php echo $disable_right ? 'true' : 'false'; ?>">&gt&gt</a>
   <br>
 
   <!-- Links to "dilbert.com" and the GitHub repo -->
