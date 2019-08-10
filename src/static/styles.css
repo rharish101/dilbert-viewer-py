@@ -1,12 +1,11 @@
-html, body {
-  height: 100%;
-}
+html { height: 100%; }
 
-body {
+body
+{
+  min-height: 100%;
   display: flex;
   margin: 0;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  text-align: center;
 }
