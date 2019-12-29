@@ -149,7 +149,7 @@ function get_dilbert_data($conn, $comic)
   {
     # Invalid date format provided; so go to latest comic
     $comic_date = $now;
-    $comic = $comic_date->format(FOMAT);
+    $comic = $comic_date->format(FORMAT);
   }
 
   # If comic in cache and not old
