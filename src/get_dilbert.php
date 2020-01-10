@@ -164,9 +164,6 @@ function get_dilbert_data($conn, $comic)
   # Multiple returns (as an array) are stored into LHS using list
   list($content, $data['latest_date']) = get_curl_info(SOURCE_PREFIX . $comic_date->format(FORMAT));
 
-  if ($comic === "now")  # Get actual latest comic
-    $comic_date = new DateTime($data['latest_date']);
-
   # Get the URL of the comic image
   preg_match('/<img[^>]*class="img-[^>]*src="([^"]+)"[^>]*>/', $content, $matches);
   $data['img_url'] = $matches[1];
@@ -182,8 +179,7 @@ function get_dilbert_data($conn, $comic)
 
   # Parse the actual comic date; this is done as if the date is wrong, dilbert.com redirects to the closest comic date
   $comic_date = DateTime::createFromFormat('D M d, Y', $date);
-  $comic = $comic_date->format(FORMAT);
-  $data['actual_date'] = $comic;
+  $data['actual_date'] = $comic_date->format(FORMAT);
 
   # Get the title, if it exists; else empty string
   preg_match('/<span class="comic-title-name">([^<]+)<\/span/', $content, $matches);
@@ -196,7 +192,7 @@ function get_dilbert_data($conn, $comic)
   $data['right_date'] = min(new DateTime($data['latest_date']), $comic_date)->format(FORMAT);
 
   # Store in cache
-  cache_data($conn, $data, $comic);
+  cache_data($conn, $data, $data['actual_date']);
 
   return $data;
 }
