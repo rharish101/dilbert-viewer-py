@@ -121,7 +121,9 @@ function get_curl_info($url)
   # Get the latest comic's URL
   # This relies on "dilbert.com" auto-redirecting to the latest comic
   $resp_url = curl_getinfo($latest_date_handle, CURLINFO_EFFECTIVE_URL);
-  $latest_date = end(explode("/", $resp_url));  # Split by "/" and get the last element
+  $url_elems = explode("/", $resp_url);  # Split by "/" into an array variable
+  # `end` requires a variable reference, which is why `$url_elems` is to be used
+  $latest_date = end($url_elems);  # Get the last element of the array variable
 
   # Close the single handles too
   curl_close($comic_handle);
