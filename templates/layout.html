@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+  <title>{% if data['title'] != "" %}{{ data['title'] }} - {% endif %}Dilbert Viewer</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}" sizes="96x96">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body class="text-center">
+  <!-- Date and title (if exists) -->
+  <div class="h4 mx-1 my-2">{{ data['dateStr'] }}</div>
+  <div class="h6 m-1">{{ data['title'] }}</div>
+
+  <!-- Comic image -->
+  <img class="img-fluid my-3 px-2" alt="{{ data['actualDate'] }}" src="{{ data['imgURL'] }}"></img>
+
+  <!-- Navigation buttons -->
+  <div class="m-2">
+    <a href="/{{ first_comic }}" role="button" class="btn btn-primary m-1{% if disable_left_nav %} disabled{% endif %}" aria-disabled="{% if disable_left_nav %}true{% else %}false{% endif %}">&lt&lt</a>
+    <a href="/{{ previous_comic }}" role="button" class="btn btn-primary m-1{% if disable_left_nav %} disabled{% endif %}" aria-disabled="{% if disable_left_nav %}true{% else %}false{% endif %}">&lt</a>
+    <a href="/random" role="button" class="btn btn-primary m-1">Random</a>
+    <a href="/{{ next_comic }}" role="button" class="btn btn-primary m-1{% if disable_right_nav %} disabled{% endif %}" aria-disabled="{% if disable_right_nav %}true{% else %}false{% endif %}">&gt</a>
+    <a href="/" role="button" class="btn btn-primary m-1{% if disable_right_nav %} disabled{% endif %}" aria-disabled="{% if disable_right_nav %}true{% else %}false{% endif %}">&gt&gt</a>
+  </div>
+
+  <!-- Links to "dilbert.com" and the GitHub repo -->
+  <a href="{{ permalink }}" target="_blank" role="button" class="btn btn-link m-1">Permalink</a>
+  <a href="{{ repo }}" target="_blank" class="btn btn-light m-1">
+    <img src="{{ url_for('static', filename='github.png') }}" height="24" width="24">
+  </a>
+</body>
+
+</html>

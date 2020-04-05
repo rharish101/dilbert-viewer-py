@@ -1,0 +1,15 @@
+"""All constants used by this web page."""
+FIRST_COMIC = "1989-04-16"  # date of the first dilbert comic ever
+DATE_FMT = "%Y-%m-%d"  # date format used by "dilbert.com" for URLs
+ALT_DATE_FMT = "%A %B %d, %Y"  # date format used by "dilbert.com" for display
+
+MAX_FETCH_CONN = 20  # limit for connections to "dilbert.com" for scraping
+FETCH_TIMEOUT = 3  # timeout in seconds for fetching a comic from "dilbert.com"
+
+MAX_DB_CONN = 10  # limit for connections to database
+DB_TIMEOUT = 3  # timeout in seconds for a single database operation
+CACHE_LIMIT = 5000  # in no. of comics; Heroku's free tier has a limit of 10k
+LATEST_DATE_REFRESH = 2  # hrs after which the latest date needs to be queried
+
+SRC_PREFIX = "https://dilbert.com/strip/"  # prefix for comics on "dilbert.com"
+REPO = "https://github.com/rharish101/dilbert-viewer"  # for publicity

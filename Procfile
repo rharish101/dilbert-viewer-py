@@ -1,1 +1,1 @@
-web: vendor/bin/heroku-php-apache2 src/
+web: python src/main.py
