@@ -5,54 +5,59 @@ from constants import LATEST_DATE_REFRESH, SRC_PREFIX
 from utils import date_to_str, str_to_date
 
 
-async def get_cached_latest_date(conn):
+async def get_cached_latest_date(pool):
     """Get the cached latest date from the database.
 
     If the latest date is stale (ie. was updated a long time back), or it
     wasn't found in the cache, None is returned.
 
     Args:
-        conn (`asyncpg.Connection`): The database connection
+        pool (`asyncpg.pool.Pool`): The database connection pool
 
     Returns:
         str: The date of the latest comic
 
     """
     # TODO: Raise server error
-    date = await conn.fetchval(
-        "SELECT latest FROM latest_date WHERE last_check >= "
-        "CURRENT_TIMESTAMP - INTERVAL '1 hour' * $1;",
-        LATEST_DATE_REFRESH,
-    )
+    async with pool.acquire() as conn:
+        date = await conn.fetchval(
+            "SELECT latest FROM latest_date WHERE last_check >= "
+            "CURRENT_TIMESTAMP - INTERVAL '1 hour' * $1;",
+            LATEST_DATE_REFRESH,
+        )
+
     if date is not None:
         date = date_to_str(date)
+
     return date
 
 
-async def cache_latest_date(date, conn):
+async def cache_latest_date(date, pool):
     """Cache the latest date into the database.
 
     Args:
         date (str): The date of the latest comic in the format used by
             "dilbert.com"
-        conn (`asyncpg.Connection`): The database connection
+        pool (`asyncpg.pool.Pool`): The database connection pool
 
     """
     # WHERE condition is not required as there is always only one row in
     # this table.
     # TODO: Raise server error
-    result = await conn.execute(
-        "UPDATE latest_date SET latest = $1, last_check = DEFAULT;",
-        str_to_date(date),
-    )
+    async with pool.acquire() as conn:
+        result = await conn.execute(
+            "UPDATE latest_date SET latest = $1, last_check = DEFAULT;",
+            str_to_date(date),
+        )
     if int(result.split()[1]) > 0:
         return
 
     # No rows were updated, so the table must be empty
     # TODO: Raise server error
-    await conn.execute(
-        "INSERT INTO latest_date (latest) VALUES ($1);", str_to_date(date),
-    )
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "INSERT INTO latest_date (latest) VALUES ($1);", str_to_date(date),
+        )
 
 
 async def fetch_latest_date(sess):
@@ -85,12 +90,11 @@ async def get_latest_comic(pool, sess):
         str: The date of the latest comic, in the format used by "dilbert.com"
 
     """
-    async with pool.acquire() as conn:
-        date = await get_cached_latest_date(conn)
-        if date is not None:
-            return date
+    date = await get_cached_latest_date(pool)
+    if date is not None:
+        return date
 
-        date = await fetch_latest_date(sess)
-        await cache_latest_date(date, conn)
+    date = await fetch_latest_date(sess)
+    await cache_latest_date(date, pool)
 
     return date

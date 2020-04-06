@@ -7,24 +7,25 @@ from constants import ALT_DATE_FMT, CACHE_LIMIT, SRC_PREFIX
 from utils import date_to_str, str_to_date
 
 
-async def get_cached_data(date, conn):
+async def get_cached_data(date, pool):
     """Get the cached comic data from the database.
 
     If the comic wasn't found in the cache, None is returned.
 
     Args:
         date (str): The date of the comic in the format used by "dilbert.com"
-        conn (`asyncpg.Connection`): The database connection
+        pool (`asyncpg.pool.Pool`): The database connection pool
 
     Returns:
         dict: The cached data
 
     """
     # TODO: Raise server error
-    row = await conn.fetchrow(
-        "SELECT img_url, title FROM comic_cache WHERE comic = $1;",
-        str_to_date(date),
-    )
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT img_url, title FROM comic_cache WHERE comic = $1;",
+            str_to_date(date),
+        )
     if row is None:
         return None
 
@@ -37,60 +38,66 @@ async def get_cached_data(date, conn):
 
     # Update `last_used`, so that this comic isn't accidently de-cached
     # TODO: Raise server error
-    await conn.execute(
-        "UPDATE comic_cache SET last_used = DEFAULT WHERE comic = $1;",
-        str_to_date(date),
-    )
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "UPDATE comic_cache SET last_used = DEFAULT WHERE comic = $1;",
+            str_to_date(date),
+        )
 
     return data
 
 
-async def clean_cache(conn):
+async def clean_cache(pool):
     """Remove excess rows from the cache."""
     # TODO: Raise server error
-    approx_rows = await conn.fetchval(
-        "SELECT reltuples FROM pg_class WHERE relname = 'comic_cache';"
-    )
+    async with pool.acquire() as conn:
+        approx_rows = await conn.fetchval(
+            "SELECT reltuples FROM pg_class WHERE relname = 'comic_cache';"
+        )
     if approx_rows < CACHE_LIMIT:
         return
 
     # TODO: Raise server error
-    await conn.execute(
-        "DELETE FROM comic_cache WHERE ctid in "
-        "(SELECT ctid FROM comic_cache ORDER BY last_used LIMIT $1);",
-        approx_rows - CACHE_LIMIT + 1,
-    )
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "DELETE FROM comic_cache WHERE ctid in "
+            "(SELECT ctid FROM comic_cache ORDER BY last_used LIMIT $1);",
+            approx_rows - CACHE_LIMIT + 1,
+        )
 
 
-async def cache_data(date, data, conn):
+async def cache_data(date, data, pool):
     """Cache the comic data into the database.
 
     Args:
         date (str): The date of the comic in the format used by "dilbert.com"
         data (dict): The comic data to be cached
-        conn (`asyncpg.Connection`): The database connection
+        pool (`asyncpg.pool.Pool`): The database connection pool
 
     """
-    await clean_cache(conn)
+    await clean_cache(pool)
 
     date = str_to_date(date)
 
     try:
         # TODO: Raise server error
-        await conn.execute(
-            "INSERT INTO comic_cache (comic, img_url, title) VALUES ($1, $2, $3);",
-            date,
-            data["imgURL"],
-            data["title"],
-        )
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "INSERT INTO comic_cache (comic, img_url, title) VALUES "
+                "($1, $2, $3);",
+                date,
+                data["imgURL"],
+                data["title"],
+            )
 
     except UniqueViolationError:
         # This comic date exists, so simply update `last_used`
         # TODO: Raise server error
-        await conn.execute(
-            "UPDATE comic_cache SET last_used = DEFAULT WHERE comic = $1;",
-            date,
-        )
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE comic_cache SET last_used = DEFAULT WHERE comic = $1;",
+                date,
+            )
 
 
 async def fetch_og_comic(date, sess):
@@ -169,13 +176,12 @@ async def get_comic_data(date, pool, sess):
             requests to "dilbert.com"
 
     """
-    async with pool.acquire() as conn:
-        data = await get_cached_data(date, conn)
-        if data is not None:
-            return data
+    data = await get_cached_data(date, pool)
+    if data is not None:
+        return data
 
-        scraped_content = await fetch_og_comic(date, sess)
-        data = scrape_comic(scraped_content)
-        await cache_data(date, data, conn)
+    scraped_content = await fetch_og_comic(date, sess)
+    data = scrape_comic(scraped_content)
+    await cache_data(date, data, pool)
 
     return data
