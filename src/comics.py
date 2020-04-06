@@ -5,43 +5,55 @@ from asyncio import Lock
 from asyncpg import UniqueViolationError
 
 from constants import ALT_DATE_FMT, CACHE_LIMIT, SRC_PREFIX
-from scraper import Scraper
+from scraper import Scraper, ScrapingException
 from utils import date_to_str, str_to_date
 
 
 class ComicScraper(Scraper):
     """Class for a comic scraper.
 
-    This scraper takes a date (in the format used by "dilbert.com") and returns
-    a dict representing the following info:
+    This scraper takes a date (in the format used by "dilbert.com") as input.
+    It returns a dict representing the following info:
         * title: The title of that comic
-        * actualDate: The date of the comic to which "dilbert.com" redirected
-            when given the requested date
-        * dateStr: The above date as a string formatted on "dilbert.com"
-            (NOTE: This is different from the format used to fetch comics)
-        * imgURL: The URL to the image
+        * dateStr: The date of that comic as displayed on "dilbert.com"
+        * imgURL: The URL to the comic image
+
+    NOTE: The value for the key "dateStr" represents the date in a format which
+    is different from the format used to fetch comics. Also, this date can be
+    different from the given date, as "dilbert.com" can redirect to a different
+    date. This redirection only happens if the input date in invalid.
 
     """
 
     async def get_cached_data(self, date):
         """Get the cached comic data from the database."""
         async with self.pool.acquire() as conn:
+            # The other columns in the table are: `comic`, `last_used`. `comic`
+            # is not required here, as we already have the date as a function
+            # argument. In case the date given here is invalid (i.e. it would
+            # redirect to a comic with a different date), we cannot retrieve
+            # the correct date from the cache, as we aren't caching the mapping
+            # of incorrect:correct dates. `last_used` will be updated later.
             row = await conn.fetchrow(
                 "SELECT img_url, title FROM comic_cache WHERE comic = $1;",
                 str_to_date(date),
             )
 
         if row is None:
+            # This means that the comic for this date wasn't cached, or the
+            # date is invalid (i.e. it would redirect to a comic with a
+            # different date).
             return None
 
         data = {
             "title": row[1],
-            "actualDate": date,
             "dateStr": date_to_str(str_to_date(date), fmt=ALT_DATE_FMT),
             "imgURL": row[0],
         }
 
-        # Update `last_used`, so that this comic isn't accidently de-cached
+        # Update `last_used`, so that this comic isn't accidently de-cached. We
+        # want to keep the most recently used comics in the cache, and we are
+        # currently using this comic.
         self.logger.info("Updating `last_used` for data in cache")
         async with self.pool.acquire() as conn:
             await conn.execute(
@@ -53,28 +65,32 @@ class ComicScraper(Scraper):
 
     async def _clean_cache(self):
         """Remove excess rows from the cache."""
+        # This is an approximate of the no. of rows in the `comic_cache` table.
+        # This is much faster than the accurate measurement, as given here:
+        # https://wiki.postgresql.org/wiki/Count_estimate
         async with self.pool.acquire() as conn:
             approx_rows = await conn.fetchval(
                 "SELECT reltuples FROM pg_class WHERE relname = 'comic_cache';"
             )
 
-        self.logger.info(
-            f"{approx_rows} rows found in `comic_cache`; limit: {CACHE_LIMIT}"
-        )
-
         if approx_rows < CACHE_LIMIT:
-            self.logger.info("No. of rows in `comic_cache` is less than limit")
+            self.logger.info(
+                f"No. of rows in `comic_cache` ({approx_rows}) is less than "
+                f"the limit ({CACHE_LIMIT})"
+            )
             return
 
+        rows_to_clear = approx_rows - CACHE_LIMIT + 1
         self.logger.info(
-            "No. of rows in `comic_cache` exceeds limit; cleaning"
+            f"No. of rows in `comic_cache` ({approx_rows}) exceeds the limit "
+            f"({CACHE_LIMIT}); now clearing the oldest {rows_to_clear} rows"
         )
         async with self.pool.acquire() as conn:
             await conn.execute(
                 """DELETE FROM comic_cache
                 WHERE ctid in
                 (SELECT ctid FROM comic_cache ORDER BY last_used LIMIT $1);""",
-                approx_rows - CACHE_LIMIT + 1,
+                rows_to_clear,
             )
 
     async def cache_data(self, data, date):
@@ -91,38 +107,41 @@ class ComicScraper(Scraper):
             try:
                 await self._clean_cache()
             except Exception as ex:
-                # This means that there will be some extra rows in the cache.
-                # As the row limit is a little conservative, this is not a big
-                # issue.
+                # This crash means that there can be some extra rows in the
+                # cache. As the row limit is a little conservative, this should
+                # not be a big issue.
                 self.logger.error(f"Failed to clean cache: {ex}")
                 self.logger.debug("", exc_info=True)
 
-            date = str_to_date(date)
+            date_obj = str_to_date(date)
 
             try:
                 async with self.pool.acquire() as conn:
                     await conn.execute(
-                        "INSERT INTO comic_cache (comic, img_url, title)"
-                        "VALUES ($1, $2, $3);",
-                        date,
+                        """INSERT INTO comic_cache (comic, img_url, title)
+                        VALUES ($1, $2, $3);""",
+                        date_obj,
                         data["imgURL"],
                         data["title"],
                     )
             except UniqueViolationError:
-                # This comic date exists, so simply update `last_used` later
+                # This comic date exists, so some other coroutine has already
+                # cached this date in parallel. So we can simply update
+                # `last_used` later (outside the lock).
                 self.logger.warn(
                     f"Trying to cache date {date}, which is already cached."
                 )
             else:
-                return  # succeeded in inserting to cache
+                return  # succeeded in caching data, so exit
 
+        # This only executes if caching data led to a UniqueViolation error.
         # The lock isn't needed here, as this command cannot increase the no.
         # of rows in the cache.
         self.logger.info("Now trying to update `last_used` in cache.")
         async with self.pool.acquire() as conn:
             await conn.execute(
                 "UPDATE comic_cache SET last_used = DEFAULT WHERE comic = $1;",
-                date,
+                date_obj,
             )
 
     async def scrape_data(self, date):
@@ -138,6 +157,7 @@ class ComicScraper(Scraper):
             r'<span class="comic-title-name">([^<]+)</span>', content
         )
         if match is None:
+            # Some comics don't have a title. This is mostly for older comics.
             data["title"] = ""
         else:
             data["title"] = match.groups()[0]
@@ -148,14 +168,15 @@ class ComicScraper(Scraper):
             r"([^<]+)</span>",
             content,
         )
+        if match is None:
+            raise ScrapingException("Error in scraping the date string")
         data["dateStr"] = " ".join(match.groups())
-        data["actualDate"] = date_to_str(
-            str_to_date(data["dateStr"], fmt=ALT_DATE_FMT)
-        )
 
         match = re.search(
             r'<img[^>]*class="img-[^>]*src="([^"]+)"[^>]*>', content
         )
+        if match is None:
+            raise ScrapingException("Error in scraping the image's URL")
         data["imgURL"] = match.groups()[0]
 
         return data

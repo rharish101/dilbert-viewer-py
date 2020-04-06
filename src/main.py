@@ -12,6 +12,8 @@ from quart import Quart, redirect, render_template
 
 from comics import ComicScraper
 from constants import (
+    ALT_DATE_FMT,
+    DATE_FMT_REGEX,
     DB_TIMEOUT,
     FETCH_TIMEOUT,
     FIRST_COMIC,
@@ -50,6 +52,7 @@ async def create_aux():
         ssl=ctx,
     )
 
+    # Limit max connections to "dilbert.com", else we might get blocked
     connector = aiohttp.TCPConnector(limit=MAX_FETCH_CONN)
     timeout = aiohttp.ClientTimeout(sock_connect=FETCH_TIMEOUT)
     app.client_sess = aiohttp.ClientSession(
@@ -80,39 +83,40 @@ async def serve_comic(date):
         The rendered template for the comic page
 
     """
-    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", date) is None:
+    if re.fullmatch(DATE_FMT_REGEX, date) is None:
         # If there is no comic for this date yet, "dilbert.com" will
         # auto-redirect to the latest comic.
         date = date_to_str(datetime.now())
 
+    # Execute both in parallel, as they are independent of each other
     data, latest_comic = await asyncio.gather(
         app.comic_scraper.get_data(date), app.latest_date_scraper.get_data(),
     )
 
+    # This date differs from the input date if the input is invalid (i.e.
+    # "dilbert.com" would redirect to a comic with a different date).
+    actual_date_obj = str_to_date(data["dateStr"], fmt=ALT_DATE_FMT)
+    actual_date = date_to_str(actual_date_obj)
+
     # Links to previous and next comics
     previous_comic = date_to_str(
-        max(
-            str_to_date(FIRST_COMIC),
-            str_to_date(data["actualDate"]) - timedelta(days=1),
-        )
+        max(str_to_date(FIRST_COMIC), actual_date_obj - timedelta(days=1))
     )
     next_comic = date_to_str(
-        min(
-            str_to_date(latest_comic),
-            str_to_date(data["actualDate"]) + timedelta(days=1),
-        )
+        min(str_to_date(latest_comic), actual_date_obj + timedelta(days=1))
     )
 
     # Whether to disable left/right navigation buttons
-    disable_left_nav = data["actualDate"] == FIRST_COMIC
-    disable_right_nav = data["actualDate"] == latest_comic
+    disable_left_nav = actual_date == FIRST_COMIC
+    disable_right_nav = actual_date == latest_comic
 
     # Link to original strip on "dilbert.com"
-    permalink = SRC_PREFIX + data["actualDate"]
+    permalink = SRC_PREFIX + actual_date
 
     return await render_template(
         "layout.html",
         data=data,
+        date=actual_date,
         first_comic=FIRST_COMIC,
         previous_comic=previous_comic,
         next_comic=next_comic,
@@ -135,6 +139,7 @@ async def latest_comic():
 @app.route("/<int:year>-<int:month>-<int:day>")
 async def comic_page(year, month, day):
     """Serve the requested comic from the given URL."""
+    # This depends on the format given by `DATE_FMT` in `constants.py`
     date = f"{year:04d}-{month:02d}-{day:02d}"
     return await serve_comic(date)
 
@@ -145,4 +150,6 @@ async def random_comic():
     first = str_to_date(FIRST_COMIC)
     latest = datetime.now()
     rand_date = date_to_str(random.uniform(first, latest))
+    # If there is no comic for this date yet, "dilbert.com" will auto-redirect
+    # to the latest comic.
     return redirect(f"/{rand_date}")

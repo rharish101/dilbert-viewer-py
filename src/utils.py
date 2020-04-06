@@ -7,7 +7,13 @@ from constants import DATE_FMT
 def str_to_date(date, fmt=DATE_FMT):
     """Convert the date string to a `datetime.Datetime` object.
 
-    NOTE: The given date must be in the format used by "dilbert.com".
+    Args:
+        date (str): The input date
+        fmt (str): The format of the input date
+
+    Returns:
+        `datetime.Datetime`: The converted date
+
     """
     return datetime.strptime(date, fmt)
 
@@ -15,6 +21,12 @@ def str_to_date(date, fmt=DATE_FMT):
 def date_to_str(date, fmt=DATE_FMT):
     """Convert the `datetime.Datetime` object to a date string.
 
-    The returned date will be in the format used by "dilbert.com".
+    Args:
+        date (`datetime.Datetime`): The input date
+        fmt (str): The format for the output date
+
+    Returns:
+        str: The converted date
+
     """
     return date.strftime(fmt)

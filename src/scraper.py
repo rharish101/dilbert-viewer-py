@@ -1,4 +1,8 @@
-"""Base class definition for a generic scraper that caches."""
+"""Base class definition for a scraper, and a scraping exception."""
+
+
+class ScrapingException(Exception):
+    """Used to indicate that the contents of "dilbert.com" have changed."""
 
 
 class Scraper:
@@ -7,10 +11,10 @@ class Scraper:
     def __init__(self, pool, sess, logger):
         """Store the required objects.
 
-        The objects required are:
-            * A database connection pool
-            * An HTTP client session
-            * A logger
+        Args:
+            pool (`asyncpg.pool.Pool`): The database connection pool
+            sess (`aiohttp.ClientSession`): The HTTP client session
+            logger (`logging.Logger`): The main app logger
 
         """
         self.pool = pool
@@ -34,8 +38,9 @@ class Scraper:
         try:
             data = await self.get_cached_data(*args, **kwargs)
         except Exception as ex:
-            # Better to re-scrape now than crash
+            # Better to re-scrape now than crash unexpectedly, so simply log it
             self.logger.error(f"Retrieving data from cache failed: {ex}")
+            # This logs the crash traceback for debugging purposes
             self.logger.debug("", exc_info=True)
         else:
             if data is not None:
@@ -49,8 +54,10 @@ class Scraper:
         try:
             await self.cache_data(data, *args, **kwargs)
         except Exception as ex:
-            # Better to re-scrape later-on than crash now
+            # Better to re-scrape later on than crash unexpectedly, so simply
+            # log it.
             self.logger.error(f"Caching data failed: {ex}")
+            # This logs the crash traceback for debugging purposes
             self.logger.debug("", exc_info=True)
         else:
             self.logger.info("Cached scraped data")
