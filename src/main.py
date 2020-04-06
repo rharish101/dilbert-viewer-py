@@ -10,7 +10,7 @@ import aiohttp
 import asyncpg
 from quart import Quart, redirect, render_template
 
-from comics import get_comic_data
+from comics import ComicScraper
 from constants import (
     DB_TIMEOUT,
     FETCH_TIMEOUT,
@@ -20,7 +20,7 @@ from constants import (
     REPO,
     SRC_PREFIX,
 )
-from latest import get_latest_comic
+from latest import LatestDateScraper
 from utils import date_to_str, str_to_date
 
 app = Quart("Dilbert Viewer")
@@ -33,6 +33,7 @@ async def create_aux():
     The auxiliary items are:
         * The database connection pool for caching data
         * The aiohttp session for scraping comics
+        * The scrapers for the comics and the latest comic date
 
     """
     # Heroku needs SSL for its PostgreSQL DB, but has issues with verifying
@@ -53,6 +54,11 @@ async def create_aux():
     timeout = aiohttp.ClientTimeout(sock_connect=FETCH_TIMEOUT)
     app.client_sess = aiohttp.ClientSession(
         connector=connector, timeout=timeout
+    )
+
+    app.comic_scraper = ComicScraper(app.db_pool, app.client_sess, app.logger)
+    app.latest_date_scraper = LatestDateScraper(
+        app.db_pool, app.client_sess, app.logger
     )
 
 
@@ -80,8 +86,7 @@ async def serve_comic(date):
         date = date_to_str(datetime.now())
 
     data, latest_comic = await asyncio.gather(
-        get_comic_data(date, app.db_pool, app.client_sess),
-        get_latest_comic(app.db_pool, app.client_sess),
+        app.comic_scraper.get_data(date), app.latest_date_scraper.get_data(),
     )
 
     # Links to previous and next comics
