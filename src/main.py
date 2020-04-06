@@ -3,6 +3,7 @@ import asyncio
 import os
 import random
 import re
+import ssl
 from datetime import datetime, timedelta
 
 import aiohttp
@@ -34,12 +35,19 @@ async def create_aux():
         * The aiohttp session for scraping comics
 
     """
+    # Heroku needs SSL for its PostgreSQL DB, but has issues with verifying
+    # the certificate. So simply disable verification while keeping SSL.
+    ctx = ssl.create_default_context(cafile="")
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
     # TODO: Raise server error
     app.db_pool = await asyncpg.create_pool(
         dsn=os.environ["DATABASE_URL"],
         command_timeout=DB_TIMEOUT,
         min_size=1,
         max_size=MAX_DB_CONN,
+        ssl=ctx,
     )
 
     connector = aiohttp.TCPConnector(limit=MAX_FETCH_CONN)
