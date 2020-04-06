@@ -1,11 +1,17 @@
-html { height: 100%; }
-
 body
 {
-  min-height: 100%;
+  width: 100vw;
+  min-height: 100vh;
+  margin: 0px;
+
   display: flex;
-  margin: 0;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+.nav-container
+{
+  display: flex;
+  flex-wrap: nowrap;
 }

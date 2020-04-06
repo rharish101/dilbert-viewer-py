@@ -9,7 +9,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
-<body class="text-center">
+<body class="text-center p-1">
   <!-- Date and title (if exists) -->
   <div class="h4 mx-1 my-2">{{ data['dateStr'] }}</div>
   <div class="h6 m-1">{{ data['title'] }}</div>
@@ -18,7 +18,7 @@
   <img class="img-fluid my-3 px-2" alt="{{ date }}" src="{{ data['imgURL'] }}"></img>
 
   <!-- Navigation buttons -->
-  <div class="m-2">
+  <div class="nav-container m-2">
     <a href="/{{ first_comic }}" role="button" class="btn btn-primary m-1{% if disable_left_nav %} disabled{% endif %}" aria-disabled="{% if disable_left_nav %}true{% else %}false{% endif %}">&lt&lt</a>
     <a href="/{{ previous_comic }}" role="button" class="btn btn-primary m-1{% if disable_left_nav %} disabled{% endif %}" aria-disabled="{% if disable_left_nav %}true{% else %}false{% endif %}">&lt</a>
     <a href="/random" role="button" class="btn btn-primary m-1">Random</a>
