@@ -59,7 +59,6 @@ class Scraper:
             self.logger.error(f"Caching data failed: {ex}")
             # This logs the crash traceback for debugging purposes
             self.logger.debug("", exc_info=True)
-        else:
-            self.logger.info("Cached scraped data")
 
+        self.logger.info("Cached scraped data")
         return data
