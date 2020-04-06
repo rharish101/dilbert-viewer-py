@@ -142,6 +142,3 @@ async def random_comic():
     latest = datetime.now()
     rand_date = date_to_str(random.uniform(first, latest))
     return redirect(f"/{rand_date}")
-
-
-app.run(host="0.0.0.0", port=os.environ["PORT"])
