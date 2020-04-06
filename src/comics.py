@@ -20,12 +20,12 @@ async def get_cached_data(date, pool):
         dict: The cached data
 
     """
-    # TODO: Raise server error
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             "SELECT img_url, title FROM comic_cache WHERE comic = $1;",
             str_to_date(date),
         )
+
     if row is None:
         return None
 
@@ -37,7 +37,6 @@ async def get_cached_data(date, pool):
     }
 
     # Update `last_used`, so that this comic isn't accidently de-cached
-    # TODO: Raise server error
     async with pool.acquire() as conn:
         await conn.execute(
             "UPDATE comic_cache SET last_used = DEFAULT WHERE comic = $1;",
@@ -48,16 +47,20 @@ async def get_cached_data(date, pool):
 
 
 async def clean_cache(pool):
-    """Remove excess rows from the cache."""
-    # TODO: Raise server error
+    """Remove excess rows from the cache.
+
+    Args:
+        pool (`asyncpg.pool.Pool`): The database connection pool
+
+    """
     async with pool.acquire() as conn:
         approx_rows = await conn.fetchval(
             "SELECT reltuples FROM pg_class WHERE relname = 'comic_cache';"
         )
+
     if approx_rows < CACHE_LIMIT:
         return
 
-    # TODO: Raise server error
     async with pool.acquire() as conn:
         await conn.execute(
             "DELETE FROM comic_cache WHERE ctid in "
@@ -75,12 +78,16 @@ async def cache_data(date, data, pool):
         pool (`asyncpg.pool.Pool`): The database connection pool
 
     """
-    await clean_cache(pool)
+    try:
+        await clean_cache(pool)
+    except Exception:
+        # This means that there will be some extra rows in the cache. As the
+        # row limit is very conservative, this is not a big issue.
+        pass
 
     date = str_to_date(date)
 
     try:
-        # TODO: Raise server error
         async with pool.acquire() as conn:
             await conn.execute(
                 "INSERT INTO comic_cache (comic, img_url, title) VALUES "
@@ -91,8 +98,7 @@ async def cache_data(date, data, pool):
             )
 
     except UniqueViolationError:
-        # This comic date exists, so simply update `last_used`
-        # TODO: Raise server error
+        # This comic date exists, so simply update `last_used` later
         async with pool.acquire() as conn:
             await conn.execute(
                 "UPDATE comic_cache SET last_used = DEFAULT WHERE comic = $1;",
@@ -114,7 +120,6 @@ async def fetch_og_comic(date, sess):
 
     """
     url = SRC_PREFIX + date
-    # TODO: Raise server error
     async with sess.get(url) as resp:
         return await resp.text()
 
@@ -153,14 +158,12 @@ def scrape_comic(content):
         r"</span>",
         content,
     )
-    # TODO: Raise server error
     data["dateStr"] = " ".join(match.groups())
     data["actualDate"] = date_to_str(
         str_to_date(data["dateStr"], fmt=ALT_DATE_FMT)
     )
 
     match = re.search(r'<img[^>]*class="img-[^>]*src="([^"]+)"[^>]*>', content)
-    # TODO: Raise server error
     data["imgURL"] = match.groups()[0]
 
     return data
@@ -176,12 +179,22 @@ async def get_comic_data(date, pool, sess):
             requests to "dilbert.com"
 
     """
-    data = await get_cached_data(date, pool)
-    if data is not None:
-        return data
+    try:
+        data = await get_cached_data(date, pool)
+    except Exception:
+        # Better to re-scrape now than crash
+        pass
+    else:
+        if data is not None:
+            return data
 
     scraped_content = await fetch_og_comic(date, sess)
     data = scrape_comic(scraped_content)
-    await cache_data(date, data, pool)
+
+    try:
+        await cache_data(date, data, pool)
+    except Exception:
+        # Better to re-scrape later-on than crash now
+        pass
 
     return data

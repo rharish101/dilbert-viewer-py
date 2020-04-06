@@ -41,7 +41,6 @@ async def create_aux():
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
 
-    # TODO: Raise server error
     app.db_pool = await asyncpg.create_pool(
         dsn=os.environ["DATABASE_URL"],
         command_timeout=DB_TIMEOUT,

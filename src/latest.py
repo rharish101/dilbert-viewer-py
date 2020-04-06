@@ -18,7 +18,6 @@ async def get_cached_latest_date(pool):
         str: The date of the latest comic
 
     """
-    # TODO: Raise server error
     async with pool.acquire() as conn:
         date = await conn.fetchval(
             "SELECT latest FROM latest_date WHERE last_check >= "
@@ -41,19 +40,18 @@ async def cache_latest_date(date, pool):
         pool (`asyncpg.pool.Pool`): The database connection pool
 
     """
-    # WHERE condition is not required as there is always only one row in
-    # this table.
-    # TODO: Raise server error
+    # WHERE condition is not required as there is always only one row in this
+    # table.
     async with pool.acquire() as conn:
         result = await conn.execute(
             "UPDATE latest_date SET latest = $1, last_check = DEFAULT;",
             str_to_date(date),
         )
+
     if int(result.split()[1]) > 0:
         return
 
     # No rows were updated, so the table must be empty
-    # TODO: Raise server error
     async with pool.acquire() as conn:
         await conn.execute(
             "INSERT INTO latest_date (latest) VALUES ($1);", str_to_date(date),
@@ -73,7 +71,6 @@ async def fetch_latest_date(sess):
     """
     latest = date_to_str(datetime.now())
     url = SRC_PREFIX + latest
-    # TODO: Raise server error
     async with sess.get(url) as resp:
         return resp.url.path.split("/")[-1]
 
@@ -90,11 +87,21 @@ async def get_latest_comic(pool, sess):
         str: The date of the latest comic, in the format used by "dilbert.com"
 
     """
-    date = await get_cached_latest_date(pool)
-    if date is not None:
-        return date
+    try:
+        date = await get_cached_latest_date(pool)
+    except Exception:
+        # Better to re-scrape now than crash
+        pass
+    else:
+        if date is not None:
+            return date
 
     date = await fetch_latest_date(sess)
-    await cache_latest_date(date, pool)
+
+    try:
+        await cache_latest_date(date, pool)
+    except Exception:
+        # Better to re-scrape later-on than crash now
+        pass
 
     return date
