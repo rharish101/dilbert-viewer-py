@@ -1,10 +1,9 @@
 """Scraper to get info on the latest Dilbert comic."""
 import re
-from datetime import datetime
 
 from constants import DATE_FMT_REGEX, LATEST_DATE_REFRESH, SRC_PREFIX
 from scraper import Scraper, ScrapingException
-from utils import date_to_str, str_to_date
+from utils import curr_date, date_to_str, str_to_date
 
 
 class LatestDateScraper(Scraper):
@@ -22,6 +21,7 @@ class LatestDateScraper(Scraper):
         async with self.pool.acquire() as conn:
             # The interval for "freshness" of the entry has to be given this
             # way instead of '$1 hours', because of PostgreSQL's syntax.
+            # All dates managed by asyncpg are set to UTC.
             date = await conn.fetchval(
                 """SELECT latest FROM latest_date
                 WHERE last_check >= CURRENT_TIMESTAMP - INTERVAL '1 hour' * $1;
@@ -72,7 +72,7 @@ class LatestDateScraper(Scraper):
         """Scrape the date of the latest comic from "dilbert.com"."""
         # If there is no comic for this date yet, "dilbert.com" will
         # auto-redirect to the latest comic.
-        latest = date_to_str(datetime.now())
+        latest = date_to_str(curr_date())
         url = SRC_PREFIX + latest
 
         async with self.sess.get(url) as resp:

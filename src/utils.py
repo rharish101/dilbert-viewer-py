@@ -4,6 +4,18 @@ from datetime import datetime
 from constants import DATE_FMT
 
 
+def curr_date():
+    """Return the current date.
+
+    The timezone is fixed to UTC so that the code is independent of local time.
+
+    Returns:
+        `datetime.Datetime`: The current date
+
+    """
+    return datetime.utcnow()
+
+
 def str_to_date(date, fmt=DATE_FMT):
     """Convert the date string to a `datetime.Datetime` object.
 

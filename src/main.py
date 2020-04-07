@@ -4,7 +4,7 @@ import os
 import random
 import re
 import ssl
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import aiohttp
 import asyncpg
@@ -23,7 +23,7 @@ from constants import (
     SRC_PREFIX,
 )
 from latest import LatestDateScraper
-from utils import date_to_str, str_to_date
+from utils import curr_date, date_to_str, str_to_date
 
 app = Quart("Dilbert Viewer")
 
@@ -131,7 +131,7 @@ async def serve_comic(date):
     if re.fullmatch(DATE_FMT_REGEX, date) is None:
         # If there is no comic for this date yet, "dilbert.com" will
         # auto-redirect to the latest comic.
-        date = date_to_str(datetime.now())
+        date = date_to_str(curr_date())
 
     # Execute both in parallel, as they are independent of each other
     data, latest_comic = await asyncio.gather(
@@ -166,7 +166,7 @@ async def latest_comic():
     """Serve the latest comic."""
     # If there is no comic for this date yet, "dilbert.com" will auto-redirect
     # to the latest comic.
-    today = date_to_str(datetime.now())
+    today = date_to_str(curr_date())
     return await serve_comic(today)
 
 
@@ -182,7 +182,7 @@ async def comic_page(year, month, day):
 async def random_comic():
     """Serve a random comic."""
     first = str_to_date(FIRST_COMIC)
-    latest = datetime.now()
+    latest = curr_date()
     rand_date = date_to_str(random.uniform(first, latest))
     # If there is no comic for this date yet, "dilbert.com" will auto-redirect
     # to the latest comic.
