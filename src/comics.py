@@ -95,6 +95,11 @@ class ComicScraper(Scraper):
 
     async def cache_data(self, data, date):
         """Cache the comic data into the database."""
+        # The given date can be invalid (i.e. we may have been redirected to a
+        # comic with a different date), hence get the correct date from the
+        # scraped data.
+        date = date_to_str(str_to_date(data["dateStr"], fmt=ALT_DATE_FMT))
+
         # This lock ensures that the no. of rows in the cache doesn't increase.
         # This can happen, as the code involves first clearing excess rows,
         # then adding a new row. Therefore, the following can increase the no.
