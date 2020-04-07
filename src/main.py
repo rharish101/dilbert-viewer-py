@@ -157,8 +157,8 @@ async def serve_comic(date):
         todos.append(app.latest_date_scraper.cache_data(actual_date))
 
     todos.append(_serve_template(actual_date, data, latest_comic))
-    _, to_serve = await asyncio.gather(*todos)
-    return to_serve
+    results = await asyncio.gather(*todos)
+    return results[-1]  # this is the rendered template
 
 
 @app.route("/")
