@@ -1,7 +1,5 @@
 """Scraper to get info on the latest Dilbert comic."""
-import re
-
-from constants import DATE_FMT_REGEX, LATEST_DATE_REFRESH, SRC_PREFIX
+from constants import LATEST_DATE_REFRESH, SRC_PREFIX
 from scraper import Scraper, ScrapingException
 from utils import curr_date, date_to_str, str_to_date
 
@@ -79,7 +77,10 @@ class LatestDateScraper(Scraper):
             self.logger.debug(f"Got response for latest date: {resp.status}")
             date = resp.url.path.split("/")[-1]
 
-        if re.fullmatch(DATE_FMT_REGEX, date) is None:
+        # Check to see if the date is invalid
+        try:
+            str_to_date(date)
+        except ValueError:
             raise ScrapingException(
                 "Error in scraping the latest date from the URL"
             )
