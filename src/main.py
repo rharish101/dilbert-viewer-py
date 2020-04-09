@@ -171,7 +171,7 @@ async def latest_comic():
     # If there is no comic for this date yet, we still want to keep this as the
     # homepage, as a redirection would alter the URL, and lead to slower
     # loading.
-    return await serve_comic(today, redirect=False)
+    return await serve_comic(today, to_redirect=False)
 
 
 @app.route("/<int:year>-<int:month>-<int:day>")
