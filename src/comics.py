@@ -1,6 +1,7 @@
 """Scraper to get info for requested Dilbert comics."""
 import re
 from asyncio import Lock
+from html import unescape
 
 from asyncpg import UniqueViolationError
 
@@ -165,7 +166,7 @@ class ComicScraper(Scraper):
             # Some comics don't have a title. This is mostly for older comics.
             data["title"] = ""
         else:
-            data["title"] = match.groups()[0]
+            data["title"] = unescape(match.groups()[0])
 
         match = re.search(
             r'<date class="comic-title-date" item[pP]rop="datePublished">[^<]*'
