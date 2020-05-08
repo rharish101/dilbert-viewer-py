@@ -1,15 +1,17 @@
 """All constants used by this web page."""
-FIRST_COMIC = "1989-04-16"  # date of the first Dilbert comic ever
-DATE_FMT = "%Y-%m-%d"  # date format used by "dilbert.com" for URLs
-ALT_DATE_FMT = "%A %B %d, %Y"  # date format used by "dilbert.com" for display
+from typing_extensions import Final
 
-MAX_FETCH_CONN = 20  # limit for connections to "dilbert.com" for scraping
-FETCH_TIMEOUT = 3  # timeout in seconds for fetching a comic from "dilbert.com"
+FIRST_COMIC: Final = "1989-04-16"  # date of the first Dilbert comic ever
+DATE_FMT: Final = "%Y-%m-%d"  # date format used for URLs
+ALT_DATE_FMT: Final = "%A %B %d, %Y"  # date format used for display
 
-MAX_DB_CONN = 10  # limit for connections to database
-DB_TIMEOUT = 3  # timeout in seconds for a single database operation
-CACHE_LIMIT = 9000  # in no. of comics; Heroku's free tier has a limit of 10k
-LATEST_DATE_REFRESH = 2  # hrs after which the latest date needs to be queried
+MAX_FETCH_CONN: Final = 20  # limit for connections for scraping
+FETCH_TIMEOUT: Final = 3  # timeout in seconds for fetching a comic
 
-SRC_PREFIX = "https://dilbert.com/strip/"  # prefix for comics on "dilbert.com"
-REPO = "https://github.com/rharish101/dilbert-viewer"  # for publicity
+MAX_DB_CONN: Final = 10  # limit for connections to database
+DB_TIMEOUT: Final = 3  # timeout in seconds for a single database operation
+CACHE_LIMIT: Final = 9000  # no. of comics; Heroku's free tier limits it to 10k
+LATEST_DATE_REFRESH: Final = 2  # hrs after which latest date is to be queried
+
+SRC_PREFIX: Final = "https://dilbert.com/strip/"  # "dilbert.com" comic prefix
+REPO: Final = "https://github.com/rharish101/dilbert-viewer"  # for publicity

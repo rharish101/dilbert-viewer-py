@@ -4,41 +4,41 @@ from datetime import datetime
 from constants import DATE_FMT
 
 
-def curr_date():
+def curr_date() -> datetime:
     """Return the current date.
 
     The timezone is fixed to UTC so that the code is independent of local time.
 
     Returns:
-        `datetime.Datetime`: The current date
+        The current date
 
     """
     return datetime.utcnow()
 
 
-def str_to_date(date, fmt=DATE_FMT):
-    """Convert the date string to a `datetime.Datetime` object.
+def str_to_date(date_str: str, fmt: str = DATE_FMT) -> datetime:
+    """Convert the date string to a `datetime.datetime` object.
 
     Args:
-        date (str): The input date
-        fmt (str): The format of the input date
+        date_str: The input date
+        fmt: The format of the input date
 
     Returns:
-        `datetime.Datetime`: The converted date
+        The converted date
 
     """
-    return datetime.strptime(date, fmt)
+    return datetime.strptime(date_str, fmt)
 
 
-def date_to_str(date, fmt=DATE_FMT):
-    """Convert the `datetime.Datetime` object to a date string.
+def date_to_str(date_obj: datetime, fmt: str = DATE_FMT) -> str:
+    """Convert the `datetime.datetime` object to a date string.
 
     Args:
-        date (`datetime.Datetime`): The input date
-        fmt (str): The format for the output date
+        date_obj: The input date
+        fmt: The format for the output date
 
     Returns:
-        str: The converted date
+        The converted date
 
     """
-    return date.strftime(fmt)
+    return date_obj.strftime(fmt)

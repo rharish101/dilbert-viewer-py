@@ -4,10 +4,11 @@ import os
 import random
 import ssl
 from datetime import timedelta
+from typing import Union
 
 import aiohttp
 import asyncpg
-from quart import Quart, redirect, render_template
+from quart import Quart, Response, redirect, render_template
 
 from comics import ComicScraper
 from constants import (
@@ -27,7 +28,7 @@ app = Quart("Dilbert Viewer")
 
 
 @app.before_serving
-async def create_aux():
+async def create_aux() -> None:
     """Initialize and store auxiliary items.
 
     The auxiliary items are:
@@ -64,21 +65,21 @@ async def create_aux():
 
 
 @app.after_serving
-async def close_aux():
+async def close_aux() -> None:
     """Gracefully close the auxiliary items."""
     await app.db_pool.close()
     await app.client_sess.close()
 
 
-async def _serve_template(date, data, latest_comic):
+async def _serve_template(date: str, data: dict, latest_comic: str) -> str:
     """Serve the HTML given scraped data.
 
     Both input dates must be in the format used by "dilbert.com".
 
     Args:
-        date (str): The (possibly corrected) date of the comic
-        data (dict): The scraped comic data
-        latest_comic (str): The date of the latest comic
+        date: The (possibly corrected) date of the comic
+        data: The scraped comic data
+        latest_comic: The date of the latest comic
 
     Returns:
         The rendered template for the comic page
@@ -115,13 +116,15 @@ async def _serve_template(date, data, latest_comic):
     )
 
 
-async def serve_comic(date, to_redirect=True):
+async def serve_comic(
+    date: str, allow_redirect: bool = True
+) -> Union[str, Response]:
     """Serve the requested comic.
 
     Args:
-        date (str): The date of the requested comic, in the format used by
+        date: The date of the requested comic, in the format used by
             "dilbert.com"
-        to_redirect (bool): If there is no comic found for this date, then
+        allow_redirect: If there is no comic found for this date, then
             whether to redirect to the correct date
 
     Returns:
@@ -140,7 +143,7 @@ async def serve_comic(date, to_redirect=True):
 
     # Replicates the behaviour of "dilbert.com" by redirecting to the correct
     # date.
-    if to_redirect and actual_date != date:
+    if allow_redirect and actual_date != date:
         return redirect(f"/{actual_date}")
 
     # This will contain awaitables for caching data (if required) and rendering
@@ -162,7 +165,7 @@ async def serve_comic(date, to_redirect=True):
 
 
 @app.route("/")
-async def latest_comic():
+async def latest_comic() -> str:
     """Serve the latest comic."""
     # If there is no comic for this date yet, "dilbert.com" will auto-redirect
     # to the latest comic.
@@ -171,11 +174,11 @@ async def latest_comic():
     # If there is no comic for this date yet, we still want to keep this as the
     # homepage, as a redirection would alter the URL, and lead to slower
     # loading.
-    return await serve_comic(today, to_redirect=False)
+    return await serve_comic(today, allow_redirect=False)
 
 
 @app.route("/<int:year>-<int:month>-<int:day>")
-async def comic_page(year, month, day):
+async def comic_page(year: int, month: int, day: int) -> Union[str, Response]:
     """Serve the requested comic from the given URL."""
     # This depends on the format given by `DATE_FMT` from constants.py
     date = f"{year:04d}-{month:02d}-{day:02d}"
@@ -192,11 +195,11 @@ async def comic_page(year, month, day):
 
 
 @app.route("/random")
-async def random_comic():
+async def random_comic() -> Response:
     """Serve a random comic."""
     first = str_to_date(FIRST_COMIC)
     latest = curr_date()
-    rand_date = date_to_str(random.uniform(first, latest))
+    rand_date = date_to_str(random.uniform(first, latest))  # type: ignore
     # If there is no comic for this date yet, "dilbert.com" will auto-redirect
     # to the latest comic.
     return redirect(f"/{rand_date}")
