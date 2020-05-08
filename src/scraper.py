@@ -1,11 +1,12 @@
-"""Base class definition for a scraper, and a scraping exception."""
+"""Abstract base class definition for a scraper, and a scraping exception."""
+from abc import ABC, abstractmethod
 
 
 class ScrapingException(Exception):
     """Used to indicate that the contents of "dilbert.com" have changed."""
 
 
-class Scraper:
+class Scraper(ABC):
     """Generic scraper that supports caching of whatever it scrapes."""
 
     def __init__(self, pool, sess, logger):
@@ -21,17 +22,17 @@ class Scraper:
         self.sess = sess
         self.logger = logger
 
+    @abstractmethod
     async def get_cached_data(self, *args, **kwargs):
         """Retrieve cached data from the database."""
-        raise NotImplementedError("This must be overriden per use case")
 
+    @abstractmethod
     async def cache_data(self, data, *args, **kwargs):
         """Cache data into the database."""
-        raise NotImplementedError("This must be overriden per use case")
 
+    @abstractmethod
     async def scrape_data(self, *args, **kwargs):
         """Scrape data from the source."""
-        raise NotImplementedError("This must be overriden per use case")
 
     async def get_data(self, *args, **kwargs):
         """Retrieve the data, either from the source or from cache."""
