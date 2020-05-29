@@ -11,7 +11,6 @@ def curr_date() -> datetime:
 
     Returns:
         The current date
-
     """
     return datetime.utcnow()
 
@@ -25,7 +24,6 @@ def str_to_date(date_str: str, fmt: str = DATE_FMT) -> datetime:
 
     Returns:
         The converted date
-
     """
     return datetime.strptime(date_str, fmt)
 
@@ -39,6 +37,5 @@ def date_to_str(date_obj: datetime, fmt: str = DATE_FMT) -> str:
 
     Returns:
         The converted date
-
     """
     return date_obj.strftime(fmt)

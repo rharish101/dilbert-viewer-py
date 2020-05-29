@@ -8,6 +8,11 @@ class LatestDateScraper(Scraper[str, None]):
     """Class to scrape the date of the latest Dilbert comic.
 
     This scraper returns that date in the format used by "dilbert.com".
+
+    Attributes:
+        pool: The database connection pool
+        sess: The HTTP client session
+        logger: The main app logger
     """
 
     async def _get_cached_data(self, _: None = None) -> str:

@@ -17,7 +17,13 @@ class ScrapingException(Exception):
 
 
 class Scraper(ABC, Generic[ScrapedData, DataRef]):
-    """Generic scraper that supports caching of whatever it scrapes."""
+    """Generic scraper that supports caching of whatever it scrapes.
+
+    Attributes:
+        pool: The database connection pool
+        sess: The HTTP client session
+        logger: The main app logger
+    """
 
     def __init__(
         self, pool: Pool, sess: ClientSession, logger: Logger
@@ -28,7 +34,6 @@ class Scraper(ABC, Generic[ScrapedData, DataRef]):
             pool: The database connection pool
             sess: The HTTP client session
             logger: The main app logger
-
         """
         self.pool = pool
         self.sess = sess

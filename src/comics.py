@@ -27,6 +27,10 @@ class ComicScraper(Scraper[ComicData, str]):
     different from the given date, as "dilbert.com" can redirect to a different
     date. This redirection only happens if the input date in invalid.
 
+    Attributes:
+        pool: The database connection pool
+        sess: The HTTP client session
+        logger: The main app logger
     """
 
     async def _update_last_used(self, date: str) -> None:

@@ -62,7 +62,6 @@ async def create_aux() -> None:
         * The database connection pool for caching data
         * The aiohttp session for scraping comics
         * The scrapers for the comics and the latest comic date
-
     """
     # Initialize independent components in parallel
     await asyncio.gather(_init_db_pool(), _init_client_sess())
@@ -95,7 +94,6 @@ async def _serve_template(date: str, data: dict, latest_comic: str) -> str:
 
     Returns:
         The rendered template for the comic page
-
     """
     date_obj = str_to_date(date)
 
@@ -141,7 +139,6 @@ async def serve_comic(
 
     Returns:
         The rendered template for the comic page
-
     """
     # Execute both in parallel, as they are independent of each other
     data, latest_comic = await asyncio.gather(
