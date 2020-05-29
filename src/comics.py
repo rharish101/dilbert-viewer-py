@@ -2,6 +2,7 @@
 import asyncio
 import re
 from html import unescape
+from typing import Dict, Optional
 
 from asyncpg import UniqueViolationError
 
@@ -9,8 +10,10 @@ from constants import ALT_DATE_FMT, CACHE_LIMIT, SRC_PREFIX
 from scraper import Scraper, ScrapingException
 from utils import date_to_str, str_to_date
 
+ComicData = Dict[str, str]
 
-class ComicScraper(Scraper):
+
+class ComicScraper(Scraper[ComicData, str]):
     """Class for a comic scraper.
 
     This scraper takes a date (in the format used by "dilbert.com") as input.
@@ -26,7 +29,7 @@ class ComicScraper(Scraper):
 
     """
 
-    async def _update_last_used(self, date):
+    async def _update_last_used(self, date: str) -> None:
         """Update the last used date for the given comic."""
         self.logger.info("Updating `last_used` for data in cache")
         async with self.pool.acquire() as conn:
@@ -35,7 +38,7 @@ class ComicScraper(Scraper):
                 str_to_date(date),
             )
 
-    async def get_cached_data(self, date):
+    async def _get_cached_data(self, date: str) -> Optional[ComicData]:
         """Get the cached comic data from the database."""
         async with self.pool.acquire() as conn:
             # The other columns in the table are: `comic`, `last_used`. `comic`
@@ -70,7 +73,7 @@ class ComicScraper(Scraper):
 
         return data
 
-    async def _clean_cache(self):
+    async def _clean_cache(self) -> None:
         """Remove excess rows from the cache."""
         # This is an approximate of the no. of rows in the `comic_cache` table.
         # This is much faster than the accurate measurement, as given here:
@@ -100,7 +103,7 @@ class ComicScraper(Scraper):
                 rows_to_clear,
             )
 
-    async def cache_data(self, data, date):
+    async def _cache_data(self, data: ComicData, date: str) -> None:
         """Cache the comic data into the database."""
         # The given date can be invalid (i.e. we may have been redirected to a
         # comic with a different date), hence get the correct date from the
@@ -156,7 +159,7 @@ class ComicScraper(Scraper):
                 date_obj,
             )
 
-    async def scrape_data(self, date):
+    async def _scrape_data(self, date: str) -> ComicData:
         """Scrape the comic data of the requested date from "dilbert.com"."""
         url = SRC_PREFIX + date
         async with self.sess.get(url) as resp:
@@ -192,3 +195,14 @@ class ComicScraper(Scraper):
         data["imgURL"] = match.groups()[0]
 
         return data
+
+    async def get_comic_data(self, date: str) -> ComicData:
+        """Retrieve the data for the requested comic.
+
+        Args:
+            date: The date of the requested comic
+
+        Returns:
+            The data for the comic
+        """
+        return await super().get_data(date)

@@ -4,13 +4,13 @@ from scraper import Scraper, ScrapingException
 from utils import curr_date, date_to_str, str_to_date
 
 
-class LatestDateScraper(Scraper):
+class LatestDateScraper(Scraper[str, None]):
     """Class to scrape the date of the latest Dilbert comic.
 
     This scraper returns that date in the format used by "dilbert.com".
     """
 
-    async def get_cached_data(self):
+    async def _get_cached_data(self, _: None = None) -> str:
         """Get the cached latest date from the database.
 
         If the latest date entry is stale (i.e. it was updated a long time
@@ -33,7 +33,7 @@ class LatestDateScraper(Scraper):
 
         return date
 
-    async def cache_data(self, date):
+    async def _cache_data(self, date: str, _: None = None):
         """Cache the latest date into the database."""
         # The WHERE condition is not required as there is always only one row
         # in the `latest_date` table.
@@ -66,7 +66,7 @@ class LatestDateScraper(Scraper):
                 str_to_date(date),
             )
 
-    async def scrape_data(self):
+    async def _scrape_data(self, _: None = None) -> str:
         """Scrape the date of the latest comic from "dilbert.com"."""
         # If there is no comic for this date yet, "dilbert.com" will
         # auto-redirect to the latest comic.
@@ -86,3 +86,15 @@ class LatestDateScraper(Scraper):
             )
 
         return date
+
+    async def get_latest_date(self) -> str:
+        """Retrieve the date of the latest comic.
+
+        Returns:
+            The latest date
+        """
+        return await super().get_data(None)
+
+    async def update_latest_date(self, date: str) -> None:
+        """Update the latest date in the cache."""
+        await self._cache_data(date)

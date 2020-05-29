@@ -145,7 +145,8 @@ async def serve_comic(
     """
     # Execute both in parallel, as they are independent of each other
     data, latest_comic = await asyncio.gather(
-        app.comic_scraper.get_data(date), app.latest_date_scraper.get_data(),
+        app.comic_scraper.get_comic_data(date),
+        app.latest_date_scraper.get_latest_date(),
     )
 
     # This date differs from the input date if the input is invalid (i.e.
@@ -169,7 +170,7 @@ async def serve_comic(
     # "dilbert.com".
     if str_to_date(latest_comic) < actual_date_obj:
         latest_comic = actual_date
-        todos.append(app.latest_date_scraper.cache_data(actual_date))
+        todos.append(app.latest_date_scraper.update_latest_date(actual_date))
 
     todos.append(_serve_template(actual_date, data, latest_comic))
     results = await asyncio.gather(*todos)
