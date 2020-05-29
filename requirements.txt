@@ -1,6 +1,6 @@
 aiohttp==3.6.2
 asyncpg==0.20.1
-Hypercorn==0.9.4
-Quart==0.11.5
+Hypercorn==0.9.5
+Quart==0.12.0
 typing-extensions==3.7.4.1
 uvloop==0.14.0
