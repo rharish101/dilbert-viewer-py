@@ -1,17 +1,39 @@
 """All constants used by this web page."""
+from typing import Optional
+
 from typing_extensions import Final
 
-FIRST_COMIC: Final = "1989-04-16"  # date of the first Dilbert comic ever
-DATE_FMT: Final = "%Y-%m-%d"  # date format used for URLs
-ALT_DATE_FMT: Final = "%A %B %d, %Y"  # date format used for display
+# ==================================================
+# Date formats
+# ==================================================
+FIRST_COMIC: Final[str] = "1989-04-16"  # date of the first Dilbert comic ever
+DATE_FMT: Final[str] = "%Y-%m-%d"  # date format used for URLs
+ALT_DATE_FMT: Final[str] = "%A %B %d, %Y"  # date format used for display
 
-MAX_FETCH_CONN: Final = 20  # limit for connections for scraping
-FETCH_TIMEOUT: Final = 3  # timeout in seconds for fetching a comic
+# ==================================================
+# Parameters for scraping from "dilbert.com"
+# ==================================================
+# Limit for connections to "dilbert.com"
+MAX_FETCH_CONN: Final[int] = 20
+# Timeout (in seconds) for establishing a connection
+FETCH_TIMEOUT: Final[Optional[float]] = 3
 
-MAX_DB_CONN: Final = 10  # limit for connections to database
-DB_TIMEOUT: Final = 3  # timeout in seconds for a single database operation
-CACHE_LIMIT: Final = 9000  # no. of comics; Heroku's free tier limits it to 10k
-LATEST_DATE_REFRESH: Final = 2  # hrs after which latest date is to be queried
+# ==================================================
+# Parameters for caching to the database
+# ==================================================
+MAX_DB_CONN: Final[int] = 10  # limit for connections to database
+# Timeout (in seconds) for a single database operation
+DB_TIMEOUT: Final[Optional[float]] = 3
+# Limit (in no. of comics) for the comics cache in the database. Heroku's free
+# tier limit is 10,000.
+CACHE_LIMIT: Final[int] = 9000
+# No. of hrs after scraping the latest date when it is to be queried again
+LATEST_DATE_REFRESH: Final[int] = 2
 
-SRC_PREFIX: Final = "https://dilbert.com/strip/"  # "dilbert.com" comic prefix
-REPO: Final = "https://github.com/rharish101/dilbert-viewer"  # for publicity
+# ==================================================
+# Miscellaneous
+# ==================================================
+# URL prefix for each comic on "dilbert.com"
+SRC_PREFIX: Final[str] = "https://dilbert.com/strip/"
+# Link to the public repo; mainly for publicity :P
+REPO: Final[str] = "https://github.com/rharish101/dilbert-viewer"
