@@ -1,6 +1,6 @@
 """Scraper to get info for requested Dilbert comics."""
+import asyncio
 import re
-from asyncio import Lock
 from html import unescape
 
 from asyncpg import UniqueViolationError
@@ -25,6 +25,15 @@ class ComicScraper(Scraper):
     date. This redirection only happens if the input date in invalid.
 
     """
+
+    async def _update_last_used(self, date):
+        """Update the last used date for the given comic."""
+        self.logger.info("Updating `last_used` for data in cache")
+        async with self.pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE comic_cache SET last_used = DEFAULT WHERE comic = $1;",
+                str_to_date(date),
+            )
 
     async def get_cached_data(self, date):
         """Get the cached comic data from the database."""
@@ -54,13 +63,10 @@ class ComicScraper(Scraper):
 
         # Update `last_used`, so that this comic isn't accidently de-cached. We
         # want to keep the most recently used comics in the cache, and we are
-        # currently using this comic.
-        self.logger.info("Updating `last_used` for data in cache")
-        async with self.pool.acquire() as conn:
-            await conn.execute(
-                "UPDATE comic_cache SET last_used = DEFAULT WHERE comic = $1;",
-                str_to_date(date),
-            )
+        # currently using this comic. Since this can be run independely in the
+        # background, we do so.
+        bg_awaitable = self._update_last_used(date)
+        asyncio.create_task(bg_awaitable)
 
         return data
 
@@ -109,7 +115,7 @@ class ComicScraper(Scraper):
         #   2. Coroutine 2 clears no excess rows, as coroutine 1 did them
         #   3. Coroutine 1 adds its row
         #   4. Coroutine 2 adds its row
-        async with Lock():
+        async with asyncio.Lock():
             try:
                 await self._clean_cache()
             except Exception as ex:

@@ -27,16 +27,8 @@ from utils import curr_date, date_to_str, str_to_date
 app = Quart("Dilbert Viewer")
 
 
-@app.before_serving
-async def create_aux() -> None:
-    """Initialize and store auxiliary items.
-
-    The auxiliary items are:
-        * The database connection pool for caching data
-        * The aiohttp session for scraping comics
-        * The scrapers for the comics and the latest comic date
-
-    """
+async def _init_db_pool() -> None:
+    """Initialize the database connection pool for caching data."""
     # Heroku needs SSL for its PostgreSQL DB, but has issues with verifying
     # the certificate. So simply disable verification while keeping SSL.
     ctx = ssl.create_default_context(cafile="")
@@ -51,6 +43,9 @@ async def create_aux() -> None:
         ssl=ctx,
     )
 
+
+async def _init_client_sess() -> None:
+    """Initialize the aiohttp session for scraping comics."""
     # Limit max connections to "dilbert.com", else we might get blocked
     connector = aiohttp.TCPConnector(limit=MAX_FETCH_CONN)
     timeout = aiohttp.ClientTimeout(sock_connect=FETCH_TIMEOUT)
@@ -58,6 +53,23 @@ async def create_aux() -> None:
         connector=connector, timeout=timeout
     )
 
+
+@app.before_serving
+async def create_aux() -> None:
+    """Initialize and store auxiliary items.
+
+    The auxiliary items are:
+        * The database connection pool for caching data
+        * The aiohttp session for scraping comics
+        * The scrapers for the comics and the latest comic date
+
+    """
+    # Initialize independent components in parallel
+    await asyncio.gather(_init_db_pool(), _init_client_sess())
+
+    # Initialization of scrapers depends on the DB pool and the aiohttp
+    # client session. Hence, this can't be done in the above
+    # `asyncio.gather`.
     app.comic_scraper = ComicScraper(app.db_pool, app.client_sess, app.logger)
     app.latest_date_scraper = LatestDateScraper(
         app.db_pool, app.client_sess, app.logger
@@ -67,8 +79,8 @@ async def create_aux() -> None:
 @app.after_serving
 async def close_aux() -> None:
     """Gracefully close the auxiliary items."""
-    await app.db_pool.close()
-    await app.client_sess.close()
+    # Close independent components in parallel
+    await asyncio.gather(app.db_pool.close(), app.client_sess.close())
 
 
 async def _serve_template(date: str, data: dict, latest_comic: str) -> str:

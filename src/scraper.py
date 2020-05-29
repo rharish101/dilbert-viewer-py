@@ -1,4 +1,5 @@
 """Abstract base class definition for a scraper, and a scraping exception."""
+import asyncio
 from abc import ABC, abstractmethod
 
 
@@ -34,6 +35,17 @@ class Scraper(ABC):
     async def scrape_data(self, *args, **kwargs):
         """Scrape data from the source."""
 
+    async def _safely_cache_data(self, data, *args, **kwargs):
+        """Cache data while handling exceptions."""
+        try:
+            await self.cache_data(data, *args, **kwargs)
+        except Exception as ex:
+            # Better to re-scrape later on than crash unexpectedly, so simply
+            # log it.
+            self.logger.error(f"Caching data failed: {ex}")
+            # This logs the crash traceback for debugging purposes
+            self.logger.debug("", exc_info=True)
+
     async def get_data(self, *args, **kwargs):
         """Retrieve the data, either from the source or from cache."""
         try:
@@ -52,14 +64,10 @@ class Scraper(ABC):
         data = await self.scrape_data(*args, **kwargs)
         self.logger.info("Scraped data from source")
 
-        try:
-            await self.cache_data(data, *args, **kwargs)
-        except Exception as ex:
-            # Better to re-scrape later on than crash unexpectedly, so simply
-            # log it.
-            self.logger.error(f"Caching data failed: {ex}")
-            # This logs the crash traceback for debugging purposes
-            self.logger.debug("", exc_info=True)
+        # We already have the data to be returned, so caching the newly scraped
+        # data can be done independently in the background.
+        bg_awaitable = self._safely_cache_data(data, *args, **kwargs)
+        asyncio.create_task(bg_awaitable)
 
         self.logger.info("Cached scraped data")
         return data
