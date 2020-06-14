@@ -127,7 +127,7 @@ async def _serve_template(date: str, data: dict, latest_comic: str) -> str:
 
 
 async def serve_comic(
-    date: str, allow_redirect: bool = True
+    date: str, *, allow_redirect: bool = True
 ) -> Union[str, Response]:
     """Serve the requested comic.
 

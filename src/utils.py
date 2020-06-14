@@ -15,7 +15,7 @@ def curr_date() -> datetime:
     return datetime.utcnow()
 
 
-def str_to_date(date_str: str, fmt: str = DATE_FMT) -> datetime:
+def str_to_date(date_str: str, /, *, fmt: str = DATE_FMT) -> datetime:
     """Convert the date string to a `datetime.datetime` object.
 
     Args:
@@ -28,7 +28,7 @@ def str_to_date(date_str: str, fmt: str = DATE_FMT) -> datetime:
     return datetime.strptime(date_str, fmt)
 
 
-def date_to_str(date_obj: datetime, fmt: str = DATE_FMT) -> str:
+def date_to_str(date_obj: datetime, /, *, fmt: str = DATE_FMT) -> str:
     """Convert the `datetime.datetime` object to a date string.
 
     Args:
