@@ -25,9 +25,7 @@ class Scraper(ABC, Generic[ScrapedData, DataRef]):
         logger: The main app logger
     """
 
-    def __init__(
-        self, pool: Pool, sess: ClientSession, logger: Logger
-    ) -> None:
+    def __init__(self, pool: Pool, sess: ClientSession, logger: Logger):
         """Store the required objects.
 
         Args:
