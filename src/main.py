@@ -24,7 +24,7 @@ from constants import (
 from latest import LatestDateScraper
 from utils import curr_date, date_to_str, str_to_date
 
-app = Quart("Dilbert Viewer")
+app = Quart("Dilbert Viewer", static_url_path="")
 
 
 async def _init_db_pool() -> None:
