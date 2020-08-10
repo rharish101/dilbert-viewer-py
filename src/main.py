@@ -24,6 +24,8 @@ from constants import (
 from latest import LatestDateScraper
 from utils import curr_date, date_to_str, str_to_date
 
+# URL path for static items is set to root as it's easy to serve robots.txt by
+# keeping it in static.
 app = Quart("Dilbert Viewer", static_url_path="")
 
 
