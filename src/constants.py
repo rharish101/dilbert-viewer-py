@@ -20,13 +20,14 @@ FETCH_TIMEOUT: Final = 3
 # ==================================================
 # Parameters for caching to the database
 # ==================================================
-MAX_DB_CONN: Final = 10  # limit for connections to the cache database
+# Limit for connections to the cache database. Heroku's free tier limit is 20.
+MAX_DB_CONN: Final = 19
 # Timeout (in seconds) for a single database operation
 DB_TIMEOUT: Final = 3
 # Limit (in no. of comics) for the comics cache in the database. Heroku's free
-# tier limit is 10,000 rows in a database. Note that apart from this, we have
-# the latest date table, which always has exactly one row.
-CACHE_LIMIT: Final = 9000
+# tier limit is 10,000 rows in a database with max. size 1GB. Note that apart
+# from this, we have the latest date table, which always has exactly one row.
+CACHE_LIMIT: Final = 9900
 # No. of hrs after scraping the latest date when it is to be scraped again
 LATEST_DATE_REFRESH: Final = 2
 
