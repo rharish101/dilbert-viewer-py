@@ -1,4 +1,6 @@
 """Scraper to get info on the latest Dilbert comic."""
+from typing import Optional
+
 from constants import LATEST_DATE_REFRESH, SRC_PREFIX
 from scraper import Scraper, ScrapingException
 from utils import curr_date, date_to_str, str_to_date
@@ -15,7 +17,7 @@ class LatestDateScraper(Scraper[str, None]):
         logger: The main app logger
     """
 
-    async def _get_cached_data(self, _: None = None, /) -> str:
+    async def _get_cached_data(self, _: None = None, /) -> Optional[str]:
         """Get the cached latest date from the database.
 
         If the latest date entry is stale (i.e. it was updated a long time
@@ -38,7 +40,7 @@ class LatestDateScraper(Scraper[str, None]):
 
         return date
 
-    async def _cache_data(self, date: str, _: None = None, /):
+    async def _cache_data(self, date: str, _: None = None, /) -> None:
         """Cache the latest date into the database."""
         # The WHERE condition is not required as there is always only one row
         # in the `latest_date` table.
