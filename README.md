@@ -17,7 +17,7 @@ heroku pg:psql -a dilbert-viewer -f cache_init.sql
 
 2. Run the viewer locally:
     ```sh
-    DATABASE_URL=$(heroku config:get DATABASE_URL -a dilbert-viewer) heroku local web
+    DATABASE_URL=$(heroku config:get DATABASE_URL -a dilbert-viewer) WEB_CONCURRENCY=1 heroku local web
     ```
 
 ### For Contributing
