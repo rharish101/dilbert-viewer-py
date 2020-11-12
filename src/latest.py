@@ -46,8 +46,7 @@ class LatestDateScraper(Scraper[str, None]):
         # in the `latest_date` table.
         async with self.pool.acquire() as conn:
             result = await conn.execute(
-                "UPDATE latest_date SET latest = $1, last_check = DEFAULT;",
-                str_to_date(date),
+                "UPDATE latest_date SET latest = $1;", str_to_date(date)
             )
 
         rows_updated = int(result.split()[1])
