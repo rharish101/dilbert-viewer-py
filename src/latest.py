@@ -1,4 +1,5 @@
 """Scraper to get info on the latest Dilbert comic."""
+from datetime import timedelta
 from typing import Optional
 
 from constants import LATEST_DATE_REFRESH, SRC_PREFIX
@@ -75,7 +76,7 @@ class LatestDateScraper(Scraper[str, None]):
     async def _scrape_data(self, _: None = None, /) -> str:
         """Scrape the date of the latest comic from "dilbert.com"."""
         # If there is no comic for this date yet, "dilbert.com" will
-        # auto-redirect to the latest comic.
+        # auto-redirect to the homepage.
         latest = date_to_str(curr_date())
         url = SRC_PREFIX + latest
 
@@ -83,13 +84,21 @@ class LatestDateScraper(Scraper[str, None]):
             self.logger.debug(f"Got response for latest date: {resp.status}")
             date = resp.url.path.split("/")[-1]
 
-        # Check to see if the date is invalid
-        try:
-            str_to_date(date)
-        except ValueError:
-            raise ScrapingException(
-                "Error in scraping the latest date from the URL"
+        if date == "":
+            # Redirected to homepage, implying that there's no comic for this
+            # date. There must be a comic for the previous date, so use that.
+            date = date_to_str(curr_date() - timedelta(days=1))
+            self.logger.info(
+                f"No comic found for today ({latest}); using date: {date}"
             )
+        else:
+            # Check to see if the scraped date is invalid
+            try:
+                str_to_date(date)
+            except ValueError:
+                raise ScrapingException(
+                    "Error in scraping the latest date from the URL"
+                )
 
         return date
 

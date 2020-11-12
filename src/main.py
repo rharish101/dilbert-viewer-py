@@ -9,10 +9,10 @@ from typing import Union
 import aiohttp
 import asyncpg
 from quart import Quart, Response, redirect, render_template
+from quart.exceptions import NotFound
 
 from comics import ComicScraper
 from constants import (
-    ALT_DATE_FMT,
     DB_TIMEOUT,
     FETCH_TIMEOUT,
     FIRST_COMIC,
@@ -129,34 +129,37 @@ async def _serve_template(date: str, data: dict, latest_comic: str) -> str:
 
 
 async def serve_comic(
-    date: str, *, allow_redirect: bool = True
+    date: str, *, show_latest: bool = False
 ) -> Union[str, Response]:
     """Serve the requested comic.
 
     Args:
         date: The date of the requested comic, in the format used by
             "dilbert.com"
-        allow_redirect: If there is no comic found for this date, then
-            whether to redirect to the correct date
+        show_latest: If there is no comic found for this date, then
+            whether to show the latest comic
 
     Returns:
         The rendered template for the comic page
     """
     # Execute both in parallel, as they are independent of each other
-    data, latest_comic = await asyncio.gather(
+    comic_data, latest_comic = await asyncio.gather(
         app.comic_scraper.get_comic_data(date),
         app.latest_date_scraper.get_latest_date(),
     )
 
-    # This date differs from the input date if the input is invalid (i.e.
-    # "dilbert.com" would redirect to a comic with a different date).
-    actual_date_obj = str_to_date(data["dateStr"], fmt=ALT_DATE_FMT)
-    actual_date = date_to_str(actual_date_obj)
-
-    # Replicates the behaviour of "dilbert.com" by redirecting to the correct
-    # date.
-    if allow_redirect and actual_date != date:
-        return redirect(f"/{actual_date}")
+    # The data is None if the input is invalid (i.e. "dilbert.com" has
+    # redirected to the homepage).
+    if comic_data is None:
+        if show_latest:
+            app.logger.info(
+                f"No comic found for {date}, instead displaying the latest "
+                f"comic ({latest_comic})"
+            )
+            date = latest_comic
+            comic_data = await app.comic_scraper.get_comic_data(date)
+        else:
+            raise NotFound
 
     # This will contain awaitables for caching data (if required) and rendering
     # the template. They are both independent of each other, and thus can be
@@ -164,14 +167,13 @@ async def serve_comic(
     todos = []
 
     # The date of the latest comic is often retrieved from the cache. If
-    # "dilbert.com" has redirected to a date which is newer than the cached
-    # value, then there is a new "latest comic". So cache the answer of
-    # "dilbert.com".
-    if str_to_date(latest_comic) < actual_date_obj:
-        latest_comic = actual_date
-        todos.append(app.latest_date_scraper.update_latest_date(actual_date))
+    # there is a comic for a date which is newer than the cached value, then
+    # there is a new "latest comic". So cache this date.
+    if str_to_date(latest_comic) < str_to_date(date):
+        latest_comic = date
+        todos.append(app.latest_date_scraper.update_latest_date(date))
 
-    todos.append(_serve_template(actual_date, data, latest_comic))
+    todos.append(_serve_template(date, comic_data, latest_comic))
     results = await asyncio.gather(*todos)
     return results[-1]  # this is the rendered template
 
@@ -179,14 +181,15 @@ async def serve_comic(
 @app.route("/")
 async def latest_comic() -> str:
     """Serve the latest comic."""
-    # If there is no comic for this date yet, "dilbert.com" will auto-redirect
-    # to the latest comic.
+    # If there is no comic for this date yet, "dilbert.com" will redirect
+    # to the homepage. The code can handle this by instead showing the contents
+    # of the latest comic.
     today = date_to_str(curr_date())
 
-    # If there is no comic for this date yet, we still want to keep this as the
-    # homepage, as a redirection would alter the URL, and lead to slower
-    # loading.
-    return await serve_comic(today, allow_redirect=False)
+    # If there is no comic for this date yet, we don't want to raise a 404, so
+    # just show the exact latest date without a redirection (to preserve the
+    # URL and load faster).
+    return await serve_comic(today, show_latest=True)
 
 
 @app.route("/<int:year>-<int:month>-<int:day>")
@@ -199,9 +202,7 @@ async def comic_page(year: int, month: int, day: int) -> Union[str, Response]:
     try:
         str_to_date(date)
     except ValueError:
-        # Replicates the behaviour of "dilbert.com" by redirecting to the
-        # homepage.
-        return redirect("/")
+        raise NotFound
 
     return await serve_comic(date)
 

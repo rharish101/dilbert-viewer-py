@@ -13,6 +13,10 @@ from utils import date_to_str, str_to_date
 ComicData = Dict[str, str]
 
 
+class ComicNotFoundError(ScrapingException):
+    """Used to indicate that the requested comic doesn't exist."""
+
+
 class ComicScraper(Scraper[ComicData, str]):
     """Class for a comic scraper.
 
@@ -170,6 +174,11 @@ class ComicScraper(Scraper[ComicData, str]):
             self.logger.debug(f"Got response for comic: {resp.status}")
             content = await resp.text()
 
+        if resp.url.path == "/":
+            # Redirected to homepage, implying that there's no comic for this
+            # date.
+            raise ComicNotFoundError(f"Comic for {date} not found")
+
         data = {}
 
         match = re.search(
@@ -200,13 +209,16 @@ class ComicScraper(Scraper[ComicData, str]):
 
         return data
 
-    async def get_comic_data(self, date: str) -> ComicData:
+    async def get_comic_data(self, date: str) -> Optional[ComicData]:
         """Retrieve the data for the requested comic.
 
         Args:
             date: The date of the requested comic
 
         Returns:
-            The data for the comic
+            The data for the comic, if it's found, else None
         """
-        return await super().get_data(date)
+        try:
+            return await super().get_data(date)
+        except ComicNotFoundError:
+            return None
