@@ -2,11 +2,10 @@
 import asyncio
 from abc import ABC, abstractmethod
 from logging import Logger
-from typing import Generic, Optional, TypeVar
+from typing import Generic, Optional, TypeVar, final
 
 from aiohttp import ClientSession
 from asyncpg.pool import Pool
-from typing_extensions import final
 
 ScrapedData = TypeVar("ScrapedData")
 DataRef = TypeVar("DataRef")

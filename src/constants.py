@@ -1,5 +1,5 @@
 """All constants used by this web page."""
-from typing_extensions import Final
+from typing import Final
 
 # ==================================================
 # Date formats
