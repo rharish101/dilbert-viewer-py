@@ -1,5 +1,0 @@
-aiohttp==3.7.3
-asyncpg==0.21.0
-Hypercorn==0.11.1
-Quart==0.13.1
-uvloop==0.14.0
