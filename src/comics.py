@@ -2,7 +2,7 @@
 import asyncio
 import re
 from html import unescape
-from typing import Dict, Optional
+from typing import Optional
 
 from asyncpg import UniqueViolationError
 
@@ -10,7 +10,7 @@ from constants import ALT_DATE_FMT, CACHE_LIMIT, SRC_PREFIX
 from scraper import Scraper, ScrapingException
 from utils import date_to_str, str_to_date
 
-ComicData = Dict[str, str]
+ComicData = dict[str, str]
 
 
 class ComicNotFoundError(ScrapingException):
