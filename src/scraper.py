@@ -60,12 +60,10 @@ class Scraper(ABC, Generic[ScrapedData, DataRef]):
         """Cache data while handling exceptions."""
         try:
             await self._cache_data(data, reference)
-        except Exception as ex:
+        except Exception:
             # Better to re-scrape later on than crash unexpectedly, so simply
-            # log it.
-            self.logger.error(f"Caching data failed: {ex}")
-            # This logs the crash traceback for debugging purposes
-            self.logger.debug("", exc_info=True)
+            # log the error with the traceback.
+            self.logger.exception("Caching data failed")
 
     @final
     async def get_data(self, reference: DataRef) -> ScrapedData:
@@ -80,11 +78,10 @@ class Scraper(ABC, Generic[ScrapedData, DataRef]):
         """
         try:
             data = await self._get_cached_data(reference)
-        except Exception as ex:
-            # Better to re-scrape now than crash unexpectedly, so simply log it
-            self.logger.error(f"Retrieving data from cache failed: {ex}")
-            # This logs the crash traceback for debugging purposes
-            self.logger.debug("", exc_info=True)
+        except Exception:
+            # Better to re-scrape now than crash unexpectedly, so simply log
+            # the error with the traceback.
+            self.logger.exception("Retrieving data from cache failed")
         else:
             if data is not None:
                 self.logger.info("Successful retrieval from cache")

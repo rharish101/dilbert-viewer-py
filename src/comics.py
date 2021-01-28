@@ -129,12 +129,11 @@ class ComicScraper(Scraper[ComicData, str]):
         async with asyncio.Lock():
             try:
                 await self._clean_cache()
-            except Exception as ex:
+            except Exception:
                 # This crash means that there can be some extra rows in the
                 # cache. As the row limit is a little conservative, this should
                 # not be a big issue.
-                self.logger.error(f"Failed to clean cache: {ex}")
-                self.logger.debug("", exc_info=True)
+                self.logger.exception("Failed to clean comics cache")
 
             date_obj = str_to_date(date)
 
