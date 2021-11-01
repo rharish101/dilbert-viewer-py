@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "3.9.1"
-aiohttp = "^3.7.3"
+aiohttp = "^3.7.4"
 asyncpg = "^0.21.0"
 Hypercorn = "^0.11.1"
 Quart = "^0.14.1"
