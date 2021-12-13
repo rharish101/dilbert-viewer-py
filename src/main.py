@@ -9,7 +9,7 @@ from typing import Union
 import aiohttp
 import asyncpg
 from quart import Quart, Response, redirect, render_template
-from quart.exceptions import NotFound
+from werkzeug.exceptions import NotFound
 
 from comics import ComicScraper
 from constants import (
