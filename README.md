@@ -1,7 +1,10 @@
-# Dilbert Viewer
+# Dilbert Viewer (Legacy)
 
-A simple comic viewer for Dilbert by Scott Adams, hosted on Heroku [here](https://dilbert-viewer.herokuapp.com).
-It uses the third-party [Python Poetry Buildpack](https://elements.heroku.com/buildpacks/moneymeets/python-poetry-buildpack) with the [Heroku PostgreSQL add-on](https://elements.heroku.com/addons/heroku-postgresql) for caching.
+A simple comic viewer for Dilbert by Scott Adams.
+This is meant to be hosted on Heroku [here](https://dilbert-viewer.herokuapp.com), using the third-party [Python Poetry Buildpack](https://elements.heroku.com/buildpacks/moneymeets/python-poetry-buildpack) with the [Heroku PostgreSQL add-on](https://elements.heroku.com/addons/heroku-postgresql) for caching.
+
+## Deprecation Notice
+This is now deprecated in favour of a Rust-based version in [this repository](https://github.com/rharish101/dilbert-viewer).
 
 ## Instructions
 Run the script `cache_init.sql` at the beginning to create the required tables in the cache:
